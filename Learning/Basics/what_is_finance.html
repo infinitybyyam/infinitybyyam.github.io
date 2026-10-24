@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Is Finance · Learning by Yam</title>
+
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Learning/frame.css">
+<script src="https://infinitybyyam.github.io/Learning/frame.js" defer></script>
+
+<style>
+
+/* Layout: one dark, cinematic column in the Learning by Yam family. A bakery story runs top to bottom, and each idea is followed by one live panel the reader can change. */
+
+.prose { max-width: 680px; }
+.prose p { margin: 0 0 1.15rem; color: var(--muted); }
+.prose p strong, .prose em { color: var(--text); }
+.prose strong { font-weight: 600; }
+.prose em { font-style: normal; font-weight: 500; }
+
+/* PANELS */
+.panel { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1.25rem, 3vw, 2rem); box-shadow: 0 10px 28px rgba(0,0,0,0.45); }
+.badge { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--red-text); border: 1px solid rgba(255,90,98,0.4); background: rgba(229,9,20,0.1); padding: 0.25rem 0.6rem; border-radius: 2px; margin-bottom: 0.9rem; }
+.panel p.note { font-size: 0.88rem; color: var(--muted); margin: 0.2rem 0 1.3rem; max-width: 640px; }
+.small { font-size: 0.82rem; color: var(--faint); }
+
+.chip {
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  background: var(--black); border: 1px solid var(--line); color: var(--muted);
+  padding: 0.65rem 1rem; border-radius: 4px; cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+}
+.chip:hover { color: var(--text); }
+.chip[aria-pressed="true"], .chip.on { border-color: var(--red); color: #fff; background: rgba(229,9,20,0.14); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Tap-to-name cards */
+.qgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
+.qcard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.3rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; transition: border-color .2s; }
+.qcard:hover { border-color: rgba(255,255,255,0.28); }
+.qcard[aria-expanded="true"] { border-color: var(--red); }
+.qcard .q { font-size: 1.12rem; font-weight: 500; line-height: 1.4; }
+.qcard .a { color: var(--muted); font-size: 0.93rem; line-height: 1.65; }
+.qcard .a b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; letter-spacing: 1px; color: var(--red-text); margin-bottom: 0.3rem; }
+.qcard .hint { font-size: 0.7rem; letter-spacing: 1.6px; text-transform: uppercase; color: var(--faint); margin-top: auto; }
+
+/* Layers */
+.layers { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.nest { border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem; background: rgba(255,255,255,0.015); }
+.nest .nest { margin-top: 0.6rem; }
+.layer { display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 0.55rem 0.5rem; font-family: var(--display); font-size: 1.35rem; letter-spacing: 1px; color: var(--muted); border-radius: 4px; transition: color .2s, background .2s; }
+.layer:hover { color: var(--text); }
+.layer[aria-pressed="true"] { color: #fff; background: rgba(229,9,20,0.18); }
+.lenses { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; align-items: center; }
+.lenses .lab { font-size: 0.7rem; letter-spacing: 1.6px; text-transform: uppercase; color: var(--faint); margin-right: 0.3rem; }
+.lenses .layer { width: auto; border: 1px solid var(--line); padding: 0.45rem 0.9rem; font-size: 1.15rem; }
+.lenses .layer[aria-pressed="true"] { border-color: var(--red); }
+.detail { min-width: 0; }
+.detail h3 { color: #fff; font-size: 1.9rem; }
+.detail p { color: var(--muted); margin: 0 0 1rem; font-size: 0.97rem; }
+.detail .meera { border-top: 1px solid var(--line); padding-top: 0.9rem; font-size: 0.9rem; }
+.detail .meera span { display: block; font-size: 0.68rem; letter-spacing: 1.8px; text-transform: uppercase; color: var(--red-text); margin-bottom: 0.25rem; font-weight: 700; }
+.detail .meera em { font-style: normal; color: var(--text); }
+
+/* Labs */
+.ctl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; align-items: baseline; margin-bottom: 1.1rem; max-width: 560px; }
+.ctl label { font-size: 0.9rem; color: var(--muted); }
+.ctl output { font-family: var(--display); font-size: 1.7rem; letter-spacing: 1px; color: #fff; font-variant-numeric: tabular-nums; }
+.ctl input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--red); height: 28px; }
+.toggle { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+.rows { border-top: 1px solid var(--line); margin-top: 0.4rem; }
+.rows .r { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; color: var(--muted); }
+.rows .r span { min-width: 0; }
+.rows .r b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rows .r.stack { flex-direction: column; gap: 0.25rem; }
+.rows .r.stack b { white-space: normal; font-weight: 400; color: var(--text); }
+.rows .r.key.stack b { font-family: var(--body); font-size: 0.95rem; letter-spacing: 0; font-weight: 600; }
+.rows .r.key { color: var(--text); }
+.rows .r.key b { font-family: var(--display); font-size: 1.5rem; letter-spacing: 1px; font-weight: 400; }
+.neg { color: var(--red-text) !important; }
+.pos { color: var(--good) !important; }
+.verdict { margin: 1.2rem 0 0; padding: 0.9rem 1.1rem; border-left: 3px solid var(--red); background: var(--surface2); border-radius: 0 6px 6px 0; font-size: 0.97rem; color: var(--text); max-width: 680px; }
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.cols2 > div { min-width: 0; }
+.chartbox { margin-top: 1.4rem; }
+.chartbox svg { display: block; width: 100%; height: auto; }
+.chartbox text { fill: var(--muted); font-family: var(--body); font-size: 12px; }
+.chartbox .lbl-good { fill: var(--text); font-weight: 600; }
+.chartbox .lbl-slow { fill: var(--red-text); font-weight: 600; }
+.chartbox .grid { stroke: var(--surface3); stroke-width: 1; }
+.chartbox .zero { stroke: var(--faint); stroke-width: 1; }
+.chartbox .ln { fill: none; stroke-width: 2.5; }
+.chartbox .ln-good { stroke: var(--text); }
+.chartbox .ln-slow { stroke: var(--red-text); }
+.chartbox .dot-good { fill: var(--text); stroke: var(--black); stroke-width: 2; }
+.chartbox .dot-slow { fill: var(--red-text); stroke: var(--black); stroke-width: 2; }
+.chartbox .axt { fill: var(--faint); }
+
+.plan { min-width: 0; }
+.plan h3 span { color: var(--muted); font-size: 1rem; font-family: var(--body); letter-spacing: 0; margin-left: 0.4rem; }
+.track { position: relative; height: 14px; background: var(--surface3); border-radius: 3px; margin: 0.35rem 0 0.2rem; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 3px; transition: width .2s ease; }
+.fill.low { background: var(--red-text); }
+.cost { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--red-text); }
+.tl { overflow-x: auto; margin: 0.4rem 0 1rem; }
+.tl table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.tl th, .tl td { padding: 0.35rem 0.25rem; text-align: right; border-bottom: 1px solid var(--line); }
+.tl th:first-child, .tl td:first-child { width: 4.6rem; }
+.tl th { color: var(--faint); font-weight: 500; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; }
+.tl th:first-child, .tl td:first-child { text-align: left; color: var(--muted); }
+.tl td { color: var(--text); }
+
+@media (max-width: 860px) {
+  .qgrid { grid-template-columns: 1fr; }
+  .layers { grid-template-columns: 1fr; }
+  .cols2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Basics</p>
+    <h1>What is <span class="accent">finance?</span></h1>
+    <p class="lead" style="font-size: clamp(1.0rem, 2vw, 1.2rem);">Meera loved baking sourdough in her flat and sharing loaves with friends, who soon started offering to buy them. As word of mouth spread, juggling orders in a tiny home oven started keeping her up all night. Somewhere around her 40th order, she realized her kitchen was simply too small and began dreaming of her own bakery shop.</p>
+  </header>
+
+  <!-- 1. The idea costs nothing -->
+  <section class="s">
+    <h2>The idea costs nothing. The shop does.</h2>
+    <div class="prose">
+      <p>So Meera takes a pen and lists what a shop needs. An oven. A month's rent. Flour. Someone at the counter while she bakes. The oven alone is ₹8 lakh, and rent, flour and wages for the first months need another ₹2 lakh. She has ₹4 lakh.</p>
+      <p>The idea cost her nothing, but opening the shop leaves a ₹6 lakh gap. Before she can even open the doors, three core financial choices stand right in front of her.</p>
+    </div>
+    <div class="qgrid">
+      <button class="qcard" type="button" aria-expanded="false">
+        <span class="q">Where does the rest of the money come from?</span>
+        <span class="a" hidden><b>The Financing Decision</b>Her ₹4 lakh covers less than half of the ₹10 lakh she needs. The remaining ₹6 lakh can come from a bank loan or an equity partner. Every funding route carries a distinct cost and risk profile.</span>
+        <span class="hint">Tap to name it</span>
+      </button>
+      <button class="qcard" type="button" aria-expanded="false">
+        <span class="q">What does she spend it on first?</span>
+        <span class="a" hidden><b>The Investment Decision</b>Should she buy a high-capacity commercial oven or expand counter space? Capital is scarce, so every rupee must go where it generates the highest return.</span>
+        <span class="hint">Tap to name it</span>
+      </button>
+      <button class="qcard" type="button" aria-expanded="false">
+        <span class="q">What happens to what the shop earns?</span>
+        <span class="a" hidden><b>The Dividend Decision</b>When profits start rolling in, does Meera pay that cash out to owners or retain it to fund the next shop? Payouts give immediate reward, but retaining earnings feeds growth.</span>
+        <span class="hint">Tap to name it</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 2. Terms -->
+  <section class="s">
+    <h2>Giving the worry a name</h2>
+    <div class="prose">
+      <p>Those three questions together, where the money comes from, where it goes and what comes back, are what <em>finance</em> is. It isn't only about bakeries. Meera's parents deciding whether to prepay their home loan are asking the same kind of question.</p>
+      <p>As Meera's bakery will transform from a kitchen hobby into a corporation, finance concepts will scale up alongside her. People use different terms for different slices of this machine. Tap a layer below to see how Meera’s questions evolve across different layers of finance.</p>
+    </div>
+    <div class="panel">
+      <div class="layers">
+        <div>
+          <div class="nest">
+            <button class="layer" type="button" data-k="finance" aria-pressed="true">Finance</button>
+            <div class="nest">
+              <button class="layer" type="button" data-k="corp" aria-pressed="false">Corporate finance</button>
+              <div class="nest">
+                <button class="layer" type="button" data-k="fm" aria-pressed="false">Financial management</button>
+              </div>
+            </div>
+          </div>
+          <div class="lenses">
+            <span class="lab">Cutting across</span>
+            <button class="layer" type="button" data-k="strat" aria-pressed="false">Strategic finance</button>
+            <button class="layer" type="button" data-k="val" aria-pressed="false">Valuation</button>
+          </div>
+        </div>
+        <div class="detail" id="detail" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Now let us follow Meera's growth step by step. She begins with her first major hurdle: choosing between bank debt and a partner to fund that ₹10 lakh shop.</p>
+    </div>
+  </section>
+
+  <!-- 3. Financing Decision -->
+  <section class="s">
+    <h2>Funding the shop (Financing Decision)</h2>
+    <div class="prose">
+      <p>To open the ₹10 lakh shop, Meera puts in her ₹4 lakh savings, leaving ₹6 lakh to be raised. She has two options: take a bank loan at 12% annual interest, or bring in a partner who takes an equity share in exchange for cash.</p>
+      <p>The bank demands its interest payment, rain or shine. An equity partner absorbs risk alongside her but claims a permanent cut of all future upside.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <h3>Who funds the shop?</h3>
+      <p class="note">The shop needs ₹10 lakh. Meera puts in ₹4 lakh. The other ₹6 lakh comes from the bank, a partner, or a mix. The shop is valued at ₹10 lakh, so every ₹1 lakh a partner puts in buys him 10% of it. In a normal year the shop earns ₹1.5 lakh before any financing cost, a 15% return. In a slow year it earns ₹0.6 lakh, a 6% return.</p>
+      <div class="ctl">
+        <label for="loan">Borrowed from the bank</label><output id="loanOut" for="loan"></output>
+        <input id="loan" type="range" min="0" max="6" step="0.5" value="3">
+      </div>
+      <div class="toggle" role="group" aria-label="Which year to show">
+        <button class="chip" type="button" data-y="good" aria-pressed="true">Normal year</button>
+        <button class="chip" type="button" data-y="slow" aria-pressed="false">Slow year</button>
+      </div>
+      <div class="rows" id="levRows"></div>
+      <p class="verdict" id="levVerdict" role="status" aria-live="polite"></p>
+      <div class="chartbox"><svg id="levChart" viewBox="0 0 560 250" role="img" aria-label="Meera's yearly take-home against the amount she borrows, in a normal year and in a slow year"></svg></div>
+      <p class="small" style="margin:0.8rem 0 0">All figures in ₹ lakh per year. Every rupee borrowed instead of taken from a partner lets Meera keep more of the shop, but the bank is paid first. In a normal year that lifts her share until about ₹4 lakh of borrowing, after which the extra interest outweighs it. In a slow year more borrowing soon works against her, and at ₹6 lakh she is below zero. That trade is called <strong style="color: var(--text);">leverage</strong>.</p>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Borrowing introduces fixed obligations that make slow years harder. Once funding is secured and the bakery is open and thriving, Meera faces her next big hurdle: deciding where to reinvest her extra cash to grow.</p>
+    </div>
+  </section>
+
+  <!-- 4. Investment Decision -->
+  <section class="s">
+    <h2>Allocating capital (Investment Decision)</h2>
+    <div class="prose">
+      <p>With her bakery performing well, over a few years Meera accumulates ₹10 lakh from the profit she keeps and evaluates two growth options. Plan A adds a second counter generating a steady ₹3 lakh per year for 5 years (₹15 lakh total). Plan B launches a corporate catering deal that yields ₹0 in years 1 and 2, then ₹2 lakh, ₹6 lakh, and ₹8 lakh in years 3 to 5 (₹16 lakh total).</p>
+      <p>Accounting profit suggests Plan B is superior because ₹16 lakh is bigger than ₹15 lakh. However, finance accounts for timing and risk; money received sooner can be reinvested immediately. Let's test to see what each plan is actually worth today.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <h3>Which plan is worth more today?</h3>
+      <div class="ctl">
+        <label for="rate">Return she could earn elsewhere, per year</label><output id="rateOut" for="rate"></output>
+        <input id="rate" type="range" min="0" max="20" step="0.5" value="8">
+      </div>
+      <div class="toggle" role="group" aria-label="Risk of Plan B">
+        <button class="chip" type="button" id="riskBtn" aria-pressed="false">Plan B is riskier: ask for 4 points more</button>
+      </div>
+      <div class="cols2" id="pwCols"></div>
+      <p class="verdict" id="pwVerdict" role="status" aria-live="polite"></p>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Looking strictly at accounting profit fails because it ignores cash timing, opportunity cost, and risk. Sound investment decisions target <strong>wealth creation</strong>: discounting all future net cash flows back to their value today. If her local shop ever grew large enough to list publicly one day, its share price would simply reflect the market's running estimate of that exact wealth.</p>
+    </div>
+  </section>
+
+  <!-- 5. Dividend Decision -->
+  <section class="s">
+    <h2>Sharing the spoils (Dividend Decision)</h2>
+    <div class="prose">
+      <p>Once investments start generating surplus earnings, Meera reaches her third master choice: <strong>The Dividend Decision</strong>.</p>
+      <p>She must decide how to split the profits. Should she pay out that cash to herself and her equity partner as a cash dividend, or retain the profits inside the company to fund a brand new second branch? If she brought in an equity partner earlier, this will no longer be just her solo call.</p>
+      <p>Paying dividends gives owners immediate cash rewards to use as they please. Retaining earnings feeds future organic business growth without taking on extra bank debt. Striking the right balance here determines how fast the bakery expands versus how happy the current owners are.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">The Trade-off</span>
+      <h3>Payout vs. Reinvestment</h3>
+      <div class="rows">
+        <div class="r stack"><span>If she pays out 100% as Dividend</span><b>Immediate cash for owners, but zero internal funds for opening new branches.</b></div>
+        <div class="r stack"><span>If she retains 100% of Earnings</span><b>Fast expansion into new stores, but owners get no cash yield today.</b></div>
+        <div class="r key stack"><span>The CFO's Balance</span><b>Find the optimal payout ratio that maximizes long-term owner wealth.</b></div>
+      </div>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Meera has figured out how to fund the shop, where to grow, and how to split the profits. But she is about to learn a brutal lesson: paper profit and cold hard cash are two entirely different worlds.</p>
+    </div>
+  </section>
+
+  <!-- 6. Cash Flow -->
+  <section class="s">
+    <h2>Daily reality (Managing Cash Flow)</h2>
+    <div class="prose">
+      <p>Accounting records a sale the day it is made. Finance asks a harder question: when does the money land in the bank? To scale up further, Meera starts supplying sourdough loaves in bulk to local cafes.</p>
+      <p>Her counter still sells ₹2.5 lakh a month, paid on the spot. The cafés add ₹1 lakh a month, and flour, staff wages, packing and rent now cost ₹3.2 lakh. On paper, her monthly profit is ₹0.3 lakh. Growing the bakery has used up most of her savings, so she starts the month with just ₹0.5 lakh in the bank. And the cafes insist on paying on 30-day credit terms.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <h3>Month one, after the cafés pay</h3>
+      <div class="ctl">
+        <label for="days">Cafés take this long to pay</label><output id="daysOut" for="days"></output>
+        <input id="days" type="range" min="0" max="30" step="1" value="30">
+      </div>
+      <div class="rows" id="cashRows"></div>
+      <p class="verdict" id="cashVerdict" role="status" aria-live="polite"></p>
+      <p class="small" style="margin:0.8rem 0 0">This is month one only. Counter customers pay on the spot. Once cafés take 30 days to pay, none of this month&rsquo;s café sales has reached the bank yet.</p>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Meera cannot pay her landlord or flour supplier with paper profit; she can only pay with cash. Managing working capital gaps, maintaining liquidity, and aligning capital decisions is the primary domain of the Chief Financial Officer (CFO). Today, the CFO works directly alongside the CEO to ensure that aggressive growth is supported by cash solvency.</p>
+    </div>
+  </section>
+
+  <!-- 7. Agency -->
+  <section class="s">
+    <h2>Scaling up (The Agency Problem)</h2>
+    <div class="prose">
+      <p>As the bakery grows to two shops, Meera can no longer manage daily operations at both. She hires a professional general manager to run the day-to-day business.</p>
+      <p>This introduces a fundamental corporate conflict: the <strong>Agency Problem</strong>. As an owner, Meera wants long-term wealth creation. The manager, however, may prioritize expanding head-count and opening prestige stores to boost his own resume, even if those decisions lower total profits. The fix is alignment: tying a manager's rewards to the actual value he builds changes the projects he decides to take on.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <h3>What does the manager choose?</h3>
+      <div class="ctl">
+        <label for="share">His pay linked to value created</label><output id="shareOut" for="share"></output>
+        <input id="share" type="range" min="0" max="40" step="1" value="0">
+      </div>
+      <div class="cols2" id="agCols"></div>
+      <p class="verdict" id="agVerdict" role="status" aria-live="polite"></p>
+      <p class="small" style="margin:0.8rem 0 0">At 0%, his pay does not depend on whether the project works. Negative pay means he shares in the loss. Amounts in ₹ lakh.</p>
+    </div>
+    <div class="prose" style="margin-top:1.6rem">
+      <p>Aligning manager incentives with long-term wealth creation reduces agency costs. Lenders face similar agency risks, enforcing strict debt covenants to protect their capital. <strong><em>From a neighborhood sourdough bakery to a multi-billion dollar enterprise, the core principles of finance remain identical: raising capital, making sound investments, deciding payouts, managing cash flow, and aligning corporate control.</em></strong></p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  var MINUS = '−';
+  function $(s) { return document.querySelector(s); }
+  function $$(s) { return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  function lakh(n, d) {
+    d = d == null ? 2 : d;
+    var z = Math.abs(n) < Math.pow(10, -d) / 2;
+    var v = Math.abs(n).toFixed(d);
+    return (n < 0 && !z ? MINUS : '') + '₹' + v + ' lakh';
+  }
+  function cls(n) { return n < -0.004 ? 'neg' : (n > 0.004 ? 'pos' : ''); }
+
+  /* Three questions */
+  $$('.qcard').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var open = c.getAttribute('aria-expanded') === 'true';
+      c.setAttribute('aria-expanded', open ? 'false' : 'true');
+      c.querySelector('.a').hidden = open;
+      c.querySelector('.hint').hidden = !open;
+    });
+  });
+
+  /* Layers */
+  var LAYERS = {
+    finance: { t: 'Finance', p: 'The whole subject: how people, businesses and governments find money, use it, and cope with not knowing how things will turn out. Everything below sits inside it.', m: 'Should she prepay her parents’ loan or invest in her own business?' },
+    corp: { t: 'Corporate finance', p: 'Finance inside a company. Once the bakery has its own name, bank account and outside investors, the questions become formal, and there are rules about who gets paid first.', m: 'Should the bakery company borrow, or sell a share to a partner?' },
+    fm: { t: 'Financial management', p: 'The working side of it: the people inside the firm who plan the money, raise it, put it to work and watch it. Books usually use this and corporate finance almost interchangeably. But we will treat corporate finance as the subject and financial management as the job.', m: 'Is there enough cash in the bank to pay the flour supplier on Friday?' },
+    strat: { t: 'Strategic finance', p: 'The same three questions, with the direction of the whole business in view. It is less about whether to buy this oven and more about which business to be in and how to pay to get there. The name is used loosely in the field, and we use it for the decisions that shape where a company goes.', m: 'Should we stay a bakery, or become a packaged snacks company?' },
+    val: { t: 'Valuation', p: 'The measuring stick under everything else. A decision is only good if it creates more value than it costs, and you cannot say that without a way to put a number on what something is worth.', m: 'What is the bakery worth, and what would a second shop add to that?' }
+  };
+  function showLayer(k) {
+    var d = LAYERS[k];
+    $('#detail').innerHTML = '<h3>' + d.t + '</h3><p>' + d.p + '</p><div class="meera"><span>Meera’s version</span><em>' + d.m + '</em></div>';
+    $$('.layer').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-k') === k ? 'true' : 'false'); });
+  }
+  $$('.layer').forEach(function (b) { b.addEventListener('click', function () { showLayer(b.getAttribute('data-k')); }); });
+  showLayer('finance');
+
+  /* Leverage lab */
+  var year = 'good';
+  var PROFIT = { good: 1.5, slow: 0.6 };
+  var INT = 0.12, MEERA_IN = 4, OUTSIDE = 6, COST = 10;
+  function levCalc(L, y) {
+    var interest = INT * L;
+    var left = PROFIT[y] - interest;
+    var partnerIn = OUTSIDE - L;
+    var pShare = partnerIn / COST, mShare = 1 - pShare;
+    var meera = left * mShare;
+    var partner = left * pShare;
+    return { interest: interest, left: left, meera: meera, partner: partner, partnerIn: partnerIn, pShare: pShare, mShare: mShare };
+  }
+  function drawLev(L) {
+    /* The drawing is sized to the box it sits in, so text stays at its real size on a phone instead of shrinking or forcing a sideways scroll. */
+    var svg = $('#levChart');
+    var W = Math.round(svg.parentNode.clientWidth) || 560;
+    W = Math.max(260, Math.min(W, 760));
+    var narrow = W < 440;
+    var H = 250, ml = 40, mr = narrow ? 12 : 84, mt = narrow ? 44 : 22, mb = 40;
+    var pw = W - ml - mr, ph = H - mt - mb, y0 = -0.2, y1 = 0.9;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    function X(l) { return ml + pw * l / 6; }
+    function Y(v) { return mt + ph * (y1 - v) / (y1 - y0); }
+    var s = '';
+    [0, 0.2, 0.4, 0.6, 0.8].forEach(function (v) {
+      s += '<line class="' + (v === 0 ? 'zero' : 'grid') + '" x1="' + ml + '" x2="' + (ml + pw) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/>';
+      s += '<text class="axt" x="' + (ml - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v.toFixed(1) + '</text>';
+    });
+    [0, 2, 4, 6].forEach(function (l) {
+      s += '<text class="axt" x="' + X(l) + '" y="' + (H - 20) + '" text-anchor="middle">' + l + '</text>';
+    });
+    s += '<text class="axt" x="' + (ml + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Borrowed from the bank (₹ lakh)</text>';
+    s += '<text class="axt" x="4" y="12">Meera keeps (₹ lakh)</text>';
+    ['good', 'slow'].forEach(function (y) {
+      var d = '';
+      for (var l = 0; l <= 6.001; l += 0.5) { d += (d ? 'L' : 'M') + X(l).toFixed(1) + ' ' + Y(levCalc(l, y).meera).toFixed(1); }
+      s += '<path class="ln ln-' + y + '" d="' + d + '"/>';
+    });
+    ['good', 'slow'].forEach(function (y) {
+      var v = levCalc(L, y).meera;
+      s += '<circle class="dot-' + y + '" cx="' + X(L) + '" cy="' + Y(v) + '" r="5"/>';
+    });
+    if (narrow) {
+      s += '<line class="ln ln-good" x1="' + ml + '" x2="' + (ml + 18) + '" y1="30" y2="30"/><text class="lbl-good" x="' + (ml + 24) + '" y="34">Normal year</text>';
+      s += '<line class="ln ln-slow" x1="' + (ml + 120) + '" x2="' + (ml + 138) + '" y1="30" y2="30"/><text class="lbl-slow" x="' + (ml + 144) + '" y="34">Slow year</text>';
+    } else {
+      s += '<text class="lbl-good" x="' + (X(6) + 8) + '" y="' + (Y(levCalc(6, 'good').meera) + 4) + '">Normal year</text>';
+      s += '<text class="lbl-slow" x="' + (X(6) + 8) + '" y="' + (Y(levCalc(6, 'slow').meera) + 4) + '">Slow year</text>';
+    }
+    $('#levChart').innerHTML = s;
+  }
+  function renderLev() {
+    var L = parseFloat($('#loan').value);
+    $('#loanOut').textContent = '₹' + L.toFixed(1) + ' lakh';
+    var c = levCalc(L, year);
+    var rows = [
+      ['What the shop earns before financing', '<b>' + lakh(PROFIT[year]) + '</b>', ''],
+      ['Interest owed to the bank, rain or shine', '<b>' + lakh(c.interest) + '</b>', ''],
+      ['Left for the people who own the bakery', '<b class="' + cls(c.left) + '">' + lakh(c.left) + '</b>', ''],
+      ['Partner’s share (he put in ' + lakh(c.partnerIn, 1) + ' for ' + Math.round(c.pShare * 100) + '% of the shop)', '<b class="' + cls(c.partner) + '">' + lakh(c.partner) + '</b>', ''],
+      ['Meera’s share (she owns ' + Math.round(c.mShare * 100) + '%)', '<b class="' + cls(c.meera) + '">' + lakh(c.meera) + '</b>', ' key']
+    ];
+    $('#levRows').innerHTML = rows.map(function (r) { return '<div class="r' + r[2] + '"><span>' + r[0] + '</span>' + r[1] + '</div>'; }).join('');
+    var g = levCalc(L, 'good').meera, s = levCalc(L, 'slow').meera;
+    var msg = 'With ' + lakh(L, 1) + ' borrowed, Meera keeps ' + lakh(g) + ' in a normal year and ' + lakh(s) + ' in a slow one.';
+    if (s < -0.004) msg += ' In the slow year the bank still has to be paid, so the shortfall comes out of her pocket.';
+    else if (L === 0) msg += ' Nothing is owed to the bank, but most of the upside goes to the partner.';
+    $('#levVerdict').textContent = msg;
+    drawLev(L);
+  }
+  /* Redraw the chart only when its width changes. Redrawing changes the chart's height, so reacting to every size change would loop. */
+  var lastW = 0;
+  function redrawIfWider() {
+    var w = Math.round($('#levChart').parentNode.clientWidth);
+    if (w && w !== lastW) { lastW = w; drawLev(parseFloat($('#loan').value)); }
+  }
+  if (window.ResizeObserver) { new ResizeObserver(function () { window.requestAnimationFrame(redrawIfWider); }).observe($('#levChart').parentNode); }
+  else { window.addEventListener('resize', redrawIfWider); }
+  $('#loan').addEventListener('input', renderLev);
+  $('#loan').addEventListener('change', renderLev);
+  $$('[data-y]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      year = b.getAttribute('data-y');
+      $$('[data-y]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      renderLev();
+    });
+  });
+  renderLev();
+
+  /* Profit vs wealth */
+  var A = [3, 3, 3, 3, 3], B = [0, 0, 2, 6, 8], OUT = 10, PREM = 4, MAXV = 17;
+  var risky = false;
+  function pv(arr, r) { var t = 0; for (var i = 0; i < arr.length; i++) t += arr[i] / Math.pow(1 + r, i + 1); return t; }
+  function sum(arr) { return arr.reduce(function (a, b) { return a + b; }, 0); }
+  function crossover(prem) {
+    var prev = null;
+    for (var r = 0; r <= 0.3001; r += 0.0005) {
+      var d = pv(A, r) - pv(B, r + prem / 100);
+      if (prev !== null && prev < 0 && d >= 0) return r * 100;
+      prev = d;
+    }
+    return null;
+  }
+  function planHtml(name, sub, arr, rate, bump, isB) {
+    var worth = pv(arr, (rate + bump) / 100);
+    var net = worth - OUT;
+    var tl = '<div class="tl"><table><tr><th>Year</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr><tr><td>Cash in</td>' + arr.map(function (v) { return '<td>' + v + '</td>'; }).join('') + '</tr></table></div>';
+    return '<div class="plan"><h3>' + name + '<span>' + sub + '</span></h3>' + tl +
+      '<div class="rows"><div class="r"><span>Total cash over five years</span><b>' + lakh(sum(arr), 0) + '</b></div>' +
+      '<div class="r"><span>Worth today' + (bump ? ' (at ' + (rate + bump).toFixed(1) + '%)' : '') + '</span><b>' + lakh(worth) + '</b></div></div>' +
+      '<div class="track" aria-hidden="true"><div class="fill' + (worth < OUT ? ' low' : '') + '" style="width:' + (worth / MAXV * 100).toFixed(1) + '%"></div><div class="cost" style="left:' + (OUT / MAXV * 100).toFixed(1) + '%"></div></div>' +
+      '<div class="small">Red line is the ₹10 lakh it costs</div>' +
+      '<div class="rows"><div class="r key"><span>Wealth created</span><b class="' + cls(net) + '">' + lakh(net) + '</b></div></div></div>';
+  }
+  function renderPW() {
+    var rate = parseFloat($('#rate').value);
+    $('#rateOut').textContent = rate.toFixed(1) + '%';
+    $('#pwCols').innerHTML = planHtml('Plan A:', 'Steady Counter', A, rate, 0) + planHtml('Plan B:', 'Catering Tie-up', B, rate, risky ? PREM : 0);
+    var a = pv(A, rate / 100), b = pv(B, (rate + (risky ? PREM : 0)) / 100);
+    var win = a > b ? 'Plan A' : 'Plan B';
+    var msg = 'Counting cash, Plan B wins by ₹1 lakh. Counting what each is worth today, ' + win + ' is ahead by ' + lakh(Math.abs(a - b)) + '.';
+    if (a - b < 0 && Math.abs(a - b) < 0.005) msg = 'The two plans are worth the same today.';
+    var x = crossover(risky ? PREM : 0);
+    if (x !== null) msg += ' Plan B only comes out ahead if her alternative return is below about ' + x.toFixed(1) + '%.';
+    else if (a > b) msg += ' Plan A is ahead at every rate on the slider.';
+    var under = [];
+    if (a < OUT) under.push('Plan A');
+    if (b < OUT) under.push('Plan B');
+    if (under.length) msg += ' ' + under.join(' and ') + (under.length > 1 ? ' are' : ' is') + ' worth less today than the ₹10 lakh ' + (under.length > 1 ? 'they cost' : 'it costs') + ', so ' + (under.length > 1 ? 'they destroy' : 'it destroys') + ' wealth even though ' + (under.length > 1 ? 'they show' : 'it shows') + ' a profit.';
+    $('#pwVerdict').textContent = msg;
+  }
+  $('#rate').addEventListener('input', renderPW);
+  $('#rate').addEventListener('change', renderPW);
+  $('#riskBtn').addEventListener('click', function () {
+    risky = !risky;
+    this.setAttribute('aria-pressed', risky ? 'true' : 'false');
+    renderPW();
+  });
+  renderPW();
+
+  /* Cash vs profit */
+  var START = 0.5, COUNTER = 2.5, CAFE = 1.0, COSTS = 3.2;
+  function renderCash() {
+    var d = parseInt($('#days').value, 10);
+    $('#daysOut').textContent = d + ' days';
+    var frac = Math.max(0, Math.min(1, (30 - d) / 30));
+    var fromCafe = CAFE * frac, owed = CAFE - fromCafe;
+    var cash = START + COUNTER + fromCafe - COSTS;
+    var profit = COUNTER + CAFE - COSTS;
+    var rows = [
+      ['Profit this month, on paper', '<b class="pos">' + lakh(profit) + '</b>', ''],
+      ['Cash from counter sales', '<b>' + lakh(COUNTER) + '</b>', ''],
+      ['Cash actually received from cafés', '<b>' + lakh(fromCafe) + '</b>', ''],
+      ['Costs paid out', '<b>' + MINUS + '₹' + COSTS.toFixed(2) + ' lakh</b>', ''],
+      ['Bank balance at month end (she started with ' + lakh(START) + ')', '<b class="' + cls(cash - START) + '">' + lakh(cash) + '</b>', ' key']
+    ];
+    $('#cashRows').innerHTML = rows.map(function (r) { return '<div class="r' + r[2] + '"><span>' + r[0] + '</span>' + r[1] + '</div>'; }).join('');
+    var m;
+    if (cash < 0) m = 'She is short by ' + lakh(-cash) + ' while still showing a profit. She will have to borrow, delay paying a supplier, or skip her own pay. This is why finance tracks cash and not only profit.';
+    else if (d === 0) m = 'Everyone pays on the spot, so her balance rises by ' + lakh(cash - START) + ', the same as her profit.';
+    else if (Math.abs(cash - START) < 0.005) m = 'Her balance is back where it started, ' + lakh(START) + ', even though she made ' + lakh(profit) + ' on paper. The cafés still owe her ' + lakh(owed) + '.';
+    else if (cash < START) m = 'Her balance has fallen from ' + lakh(START) + ' to ' + lakh(cash) + ' even though she made ' + lakh(profit) + ' on paper. The cafés still owe her ' + lakh(owed) + '. This is why finance tracks cash and not only profit.';
+    else m = 'Her balance still rises, to ' + lakh(cash) + ', but by less than her ' + lakh(profit) + ' profit, because the cafés still owe her ' + lakh(owed) + '. Push the slider towards 30 days and watch it fall.';
+    $('#cashVerdict').textContent = m;
+  }
+  $('#days').addEventListener('input', renderCash);
+  $('#days').addEventListener('change', renderCash);
+  renderCash();
+
+  /* Agency */
+  var PROJ = [
+    { n: 'Open three new shops in a year', v: -3, perk: 1.2, why: 'Bigger title and team' },
+    { n: 'Upgrade the two shops already running', v: 4.5, perk: 0.3, why: 'Little change in his title' }
+  ];
+  function renderAg() {
+    var s = parseInt($('#share').value, 10) / 100;
+    $('#shareOut').textContent = Math.round(s * 100) + '%';
+    var pay = PROJ.map(function (p) { return p.perk + s * p.v; });
+    var pick = Math.abs(pay[0] - pay[1]) < 0.0005 ? -1 : (pay[0] > pay[1] ? 0 : 1);
+    $('#agCols').innerHTML = PROJ.map(function (p, i) {
+      var myPay = pay[i];
+      var owners = p.v * (1 - s);
+      return '<div class="plan"><h3>' + p.n + '</h3><div class="rows">' +
+        '<div class="r"><span>Value it adds to the business</span><b class="' + cls(p.v) + '">' + lakh(p.v, 1) + '</b></div>' +
+        '<div class="r"><span>What it’s worth to him (' + p.why.toLowerCase() + '; costs the owners nothing)</span><b>' + lakh(p.perk, 1) + '</b></div>' +
+        '<div class="r"><span>His share of the value</span><b class="' + cls(s * p.v) + '">' + lakh(s * p.v) + '</b></div>' +
+        '<div class="r key"><span>What he gets</span><b>' + lakh(myPay) + '</b></div>' +
+        '<div class="r"><span>What the owners are left with</span><b class="' + cls(owners) + '">' + lakh(owners) + '</b></div></div></div>';
+    }).join('');
+    var m;
+    if (pick === -1) m = 'At exactly this share the manager is indifferent between the two projects.';
+    else {
+      var p = PROJ[pick], o = p.v * (1 - s);
+      m = 'He picks “' + p.n.toLowerCase() + '”. The owners end up ' + lakh(Math.abs(o)) + (o < 0 ? ' worse off.' : ' better off.');
+      if (pick === 1 && s > 0) m += ' Aligning his pay cost them ' + lakh(s * PROJ[1].v) + ' but turned a loss into a gain.';
+    }
+    $('#agVerdict').textContent = m;
+  }
+  $('#share').addEventListener('input', renderAg);
+  $('#share').addEventListener('change', renderAg);
+  renderAg();
+})();
+</script>
+
+</body>
+</html>

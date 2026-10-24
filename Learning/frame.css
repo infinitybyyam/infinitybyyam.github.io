@@ -1,0 +1,127 @@
+/* Learning by Yam: shared frame.
+   Every topic page loads this file from https://infinitybyyam.github.io/Learning/frame.css.
+   It holds the colours, fonts, page base, nav, footer, pager and the common headings.
+   Change something here and every topic page changes with it.
+   A page's own interactive pieces (sliders, charts, tables) stay in that page. */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+:root {
+  --red: #E50914;
+  --red-text: #FF5A62;
+  --red-dark: #b00710;
+  --black: #080808;
+  --surface: #121212;
+  --surface2: #1a1a1a;
+  --surface3: #262626;
+  --text: #f5f5f7;
+  --muted: #a1a1a6;
+  --faint: #8b8b91;
+  --line: rgba(255,255,255,0.1);
+  --good: #5EE08A;
+  --display: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
+  --body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+/* ---- Page base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 96px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse 70% 480px at 12% 0, rgba(229,9,20,0.16), transparent 70%) no-repeat, var(--black);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; color: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--red-text); outline-offset: 3px; }
+
+/* ---- Nav ---- */
+nav.yam-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.9rem 6%;
+  padding-top: calc(0.9rem + env(safe-area-inset-top, 0px));
+  background: rgba(8,8,8,0.88);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.yam-nav .nav-logo { display: flex; align-items: center; }
+.yam-nav .nav-logo img { display: block; height: 56px; width: auto; }
+.yam-nav .nav-links { display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; align-items: center; }
+.yam-nav .nav-links a {
+  color: var(--muted); font-size: 0.8rem; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+.yam-nav .nav-links a:hover { color: var(--text); }
+
+/* ---- Common page layout and headings ---- */
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 6%; }
+.hero { padding-block: 9.5rem 3.5rem; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--red-text); margin: 0 0 1rem; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3.4rem, 11vw, 7.6rem); line-height: 0.92; letter-spacing: 1px; margin: 0 0 1.75rem; text-wrap: balance; }
+h1 .accent { color: var(--red); }
+.lead { font-size: clamp(1.1rem, 2.2vw, 1.4rem); color: var(--muted); line-height: 1.65; max-width: 640px; margin: 0; }
+.lead strong { color: var(--text); font-weight: 500; }
+section.s { padding-block: 3.75rem; border-top: 1px solid var(--line); }
+h2 { font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 4.6vw, 3.1rem); line-height: 1; letter-spacing: 1px; margin: 0 0 1.4rem; text-wrap: balance; max-width: 760px; }
+h2[tabindex="-1"]:focus { outline: none; }
+h3 { font-family: var(--display); font-weight: 400; font-size: 1.45rem; letter-spacing: 1px; margin: 0 0 0.4rem; }
+
+/* ---- Footer ---- */
+footer.yam-footer { padding: 2.5rem 6%; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px)); }
+.yam-footer .footer-logo { font-family: var(--display); font-size: 1.2rem; letter-spacing: 2px; }
+.yam-footer .footer-logo-infinity { color: var(--text); }
+.yam-footer .footer-logo-byyam { color: var(--red); }
+.yam-footer .footer-copy { font-size: 0.8rem; color: var(--faint); }
+
+/* ---- Reading progress and paged reading (one section per screen) ---- */
+#progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 101; pointer-events: none; }
+#progress span { display: block; height: 100%; width: 100%; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); transition: transform .3s ease; box-shadow: 0 0 10px rgba(229,9,20,0.55); }
+html, body { overscroll-behavior-x: none; }
+.pager-on main.wrap { overflow-x: clip; }
+.pager-on .step { display: none; }
+.pager-on .step + .step { padding-top: var(--navh, 110px); }
+.pager-on .step.active { display: block; animation: stepIn .3s ease both; }
+.pager-on .step.active.back { animation-name: stepBack; }
+@keyframes stepIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes stepBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.pager-on body { padding-bottom: 5.5rem; }
+#pager { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.7rem 5%; padding-bottom: calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+.pager-on #pager { display: flex; }
+.pbtn { font-family: var(--body); font-size: 0.78rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 6.2rem; min-height: 44px; white-space: nowrap; padding: 0 1.1rem; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.22); background: transparent; color: #fff; transition: background .2s ease, border-color .2s ease, opacity .2s ease; }
+.pbtn:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+.pbtn.primary { background: var(--red); border-color: var(--red); box-shadow: 0 4px 18px rgba(229,9,20,0.3); }
+.pbtn.primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
+.pbtn[disabled] { opacity: 0.3; cursor: default; pointer-events: none; }
+.pmid { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; min-width: 0; }
+.dots { display: flex; align-items: center; }
+.dot { width: 26px; height: 26px; border: 0; background: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.dot::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--surface3); transition: width .25s ease, background .25s ease; }
+.dot.seen::before { background: #5a5a60; }
+.dot.on::before { width: 20px; background: var(--red); }
+.plabel { font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+
+/* ---- Phones ---- */
+@media (max-width: 768px) {
+  nav.yam-nav { flex-direction: column; gap: 0.75rem; padding: 1rem 5%; padding-top: calc(1rem + env(safe-area-inset-top, 0px)); }
+  .yam-nav .nav-logo img { height: 48px; }
+  .yam-nav .nav-links { gap: 1.25rem; }
+  .yam-nav .nav-links a { font-size: 0.72rem; letter-spacing: 0.8px; }
+  .hero { padding-block: 9rem 2.5rem; }
+  .wrap { padding-inline: 5%; }
+}
+@media (max-width: 480px) { .pbtn { min-width: 4.6rem; padding: 0 0.8rem; font-size: 0.72rem; } .dot { width: 22px; } .plabel { font-size: 0.66rem; } }
+/* On phones the dots would crowd the buttons, so only "3 / 7" shows */
+@media (max-width: 480px) { .dots { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+  .pager-on .step.active, .pager-on .step.active.back { animation: none; }
+}

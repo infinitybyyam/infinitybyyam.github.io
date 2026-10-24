@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infinity by Yam</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E50914;
+    --red-dark: #b00710;
+    --black: #080808;
+    --surface: #121212;
+    --surface2: #1a1a1a;
+    --surface3: #262626;
+    --text: #f5f5f7;
+    --muted: #a1a1a6;
+    --faint: #6e6e73;
+    color-scheme: dark;
+  }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  a { -webkit-tap-highlight-color: transparent; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 6%;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+  }
+
+  .nav-logo-img { height: 64px; width: auto; flex-shrink: 0; }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); }
+
+  .nav-dropdown { position: relative; }
+
+  .nav-dropdown-toggle {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    transition: color 0.2s ease;
+  }
+
+  .nav-dropdown-toggle:hover,
+  .nav-dropdown-toggle:focus-visible,
+  .nav-dropdown-toggle[aria-expanded="true"] { color: var(--text); }
+
+  .nav-dropdown-caret {
+    font-size: 0.6rem;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-dropdown-toggle[aria-expanded="true"] .nav-dropdown-caret { transform: rotate(180deg); }
+
+  .nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    list-style: none;
+    min-width: 200px;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 0.4rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-6px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    z-index: 200;
+  }
+
+  .nav-dropdown-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .nav-dropdown-menu li + li { margin-top: 0.15rem; }
+
+  .nav-dropdown-menu a {
+    display: block;
+    padding: 0.55rem 0.75rem;
+    border-radius: 4px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-dropdown-menu a:hover,
+  .nav-dropdown-menu a:focus-visible {
+    background: rgba(229,9,20,0.12);
+    color: #fff;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 92vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8rem 6% 5rem;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(229,9,20,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(229,9,20,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+  }
+
+  .hero-accent {
+    position: absolute;
+    top: 10%;
+    right: 5%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(229,9,20,0.15) 0%, transparent 70%);
+    z-index: 0;
+    filter: blur(40px);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .unified-text {
+    font-family: 'DM Sans', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .hero-stack {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 7.5vw, 6rem);
+    line-height: 0.92;
+    letter-spacing: 1.5px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-stack .line { display: block; }
+  .hero-stack .accent { color: var(--red); }
+
+  .hero-btns { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+  .btn-primary, .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 20px rgba(229,9,20,0.3);
+  }
+  .btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 6px 25px rgba(229,9,20,0.4); }
+
+  .btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.2);
+  }
+  .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 1rem;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+
+  /* ── LEARNING BY YAM ── */
+  .learning-section { padding: 6rem 6%; border-top: 1px solid rgba(255,255,255,0.06); }
+
+  .learning-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: stretch;
+  }
+
+  .status-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid var(--red);
+    padding: clamp(2rem, 3vw, 2.5rem);
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .status-badge {
+    display: inline-block;
+    border: 1px solid rgba(229,9,20,0.4);
+    background: rgba(229,9,20,0.1);
+    color: var(--red);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 0.35rem 0.85rem;
+    margin-bottom: 1.25rem;
+    border-radius: 2px;
+    width: fit-content;
+  }
+
+  .status-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+
+  .learning-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+
+  .learning-intro {
+    font-size: 1.05rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 700px;
+    margin-bottom: 3.5rem;
+  }
+
+  .learning-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .learning-points li {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+  }
+
+  .pt-num {
+    flex-shrink: 0;
+    background: var(--surface3);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .learning-points li div {
+    font-size: 0.95rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .learning-points strong { color: #fff; font-weight: 600; }
+
+  /* ── SANDBOX ── */
+  .sandbox-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: clamp(2rem, 3vw, 2.5rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    height: 100%;
+  }
+
+  .sandbox-eyebrow {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    background: rgba(229,9,20,0.08);
+    border: 1px solid rgba(229,9,20,0.3);
+    padding: 0.25rem 0.6rem;
+    margin-bottom: 0.5rem;
+    border-radius: 2px;
+    width: fit-content;
+  }
+
+  .sandbox-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    color: #fff;
+    margin-bottom: 0.2rem;
+  }
+
+  .sandbox-control label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .sandbox-control label span { color: #fff; font-variant-numeric: tabular-nums; }
+
+  .sandbox-control input[type="range"] {
+    width: 100%;
+    accent-color: var(--red);
+    cursor: pointer;
+  }
+
+  .sandbox-output {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0.8rem 0;
+  }
+
+  .sandbox-output-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .sandbox-output-label small {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 0.15rem;
+    color: var(--faint);
+  }
+
+  .sandbox-output-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--red);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sandbox-bars { display: flex; align-items: flex-end; gap: 0.75rem; height: 90px; padding-top: 0.2rem; }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 0.4rem;
+  }
+
+  .bar {
+    width: 100%;
+    background: var(--surface3);
+    min-height: 4px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.2s ease, background 0.2s ease;
+  }
+
+  .bar-col.current .bar { background: var(--red); box-shadow: 0 0 12px rgba(229,9,20,0.4); }
+  .bar-col span { font-size: 0.65rem; color: var(--faint); letter-spacing: 0.5px; }
+
+  .sandbox-note { font-size: 0.75rem; color: var(--faint); line-height: 1.4; font-style: italic; }
+
+  @media (max-width: 900px) {
+    .learning-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── CONTACT ── */
+  .contact-section {
+    padding: 7rem 6%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .contact-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(229,9,20,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    filter: blur(50px);
+  }
+
+  .contact-pre {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 1.25rem;
+  }
+
+  .contact-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 0.95;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+
+  .contact-links {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    transition: all 0.2s ease;
+  }
+
+  .contact-link:hover, .contact-link:focus-visible { color: #fff; border-color: #fff; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2.5rem 6%;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text);
+    letter-spacing: 2px;
+  }
+
+  .footer-copy {
+    font-size: 0.8rem;
+    color: var(--faint);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    /* Stack logo and links vertically on mobile so they aren't cramped */
+    nav {
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem 5%;
+    }
+    
+    .nav-logo-img { 
+      height: 48px; /* Slightly smaller logo for mobile */
+    }
+
+    .nav-links {
+      gap: 1.25rem;
+    }
+
+    .nav-links a, .nav-dropdown-toggle {
+      font-size: 0.72rem;
+      letter-spacing: 0.8px;
+    }
+
+    /* Reduce excessive vertical spacing on phone screens */
+    .hero {
+      padding: 7rem 5% 4rem; /* Cuts down the massive top/bottom gaps */
+    }
+
+    .page-wrap {
+      padding: 5rem 5% 4rem;
+    }
+
+    .contact-section {
+      padding: 4rem 5%;
+    }
+  }
+</style>
+</head>
+<body>
+
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img class="nav-logo-img" src="nav-mark.png" alt="Infinity by Yam">
+  </a>
+  <ul class="nav-links">
+    <li><a href="Learning/">Learning by Yam</a></li>
+    <li class="nav-dropdown">
+      <button type="button" class="nav-dropdown-toggle" id="valuation-toggle" aria-haspopup="true" aria-expanded="false">
+        Important Links <span class="nav-dropdown-caret">▾</span>
+      </button>
+      <ul class="nav-dropdown-menu" id="valuation-menu">
+        <li><a href="https://www.screener.in/" target="_blank" rel="noopener">Screener.in</a></li>
+        <li><a href="https://valueinvesting.io/" target="_blank" rel="noopener">ValueInvesting.io</a></li>
+        <li><a href="https://tradingeconomics.com/" target="_blank" rel="noopener">TradingEconomics.com</a></li>
+      </ul>
+    </li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<script>
+  (function () {
+    var toggle = document.getElementById('valuation-toggle');
+    var menu = document.getElementById('valuation-menu');
+
+    function closeMenu() {
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+    function openMenu() {
+      menu.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.classList.contains('open')) { closeMenu(); } else { openMenu(); }
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target) && e.target !== toggle) { closeMenu(); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeMenu(); }
+    });
+  })();
+</script>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-accent"></div>
+  <div class="hero-content">
+    <h1 class="hero-stack">
+      <span class="line">NOTHING.</span>
+      <span class="line accent">ANYTHING.</span>
+      <span class="line">EVERYTHING.</span>
+    </h1>
+    <div class="hero-btns">
+      <a href="#learning" class="btn-primary">Explore</a>
+      <a href="#contact" class="btn-outline">Get In Touch</a>
+    </div>
+  </div>
+</section>
+
+<!-- LEARNING BY YAM -->
+<section class="learning-section" id="learning">
+  <div class="section-label">Under this brand</div>
+  <h2 class="learning-heading">
+  <a href="Learning/" style="color: inherit; text-decoration: none; transition: color 0.2s ease;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='inherit'">Learning by Yam</a>
+</h2>
+  <p class="learning-intro">An interactive series that teaches finance and valuation concepts by letting you change the numbers yourself and watch the result respond.</p>
+
+  <div class="learning-grid">
+    <div class="status-card">
+      <div>
+        <div class="status-badge">In Progress</div>
+        <h3>Built from first principles</h3>
+        <p class="unified-text">Experience finance from the ground up. The idea is an attempt to replace static textbook equations with an active visual sandbox. By directly adjusting financial parameters and observing immediate model recalculations, learners bridge the gap between numerical input and intuitive grasp.</p>
+      </div>
+      <ol class="learning-points">
+        <li><span class="pt-num">01</span><div><strong>First-Principles Architecture:</strong> First principles, not shortcuts. Every concept is derived, not just stated</div></li>
+        <li><span class="pt-num">02</span><div><strong>Live Input Manipulation:</strong> Modify numbers dynamically to see instant structural changes in valuation outputs.</div></li>
+        <li><span class="pt-num">03</span><div><strong>Visual Reinforcement:</strong> Real-time graphical responses engineered to lock in core finance concepts.</div></li>
+      </ol>
+    </div>
+
+    <div class="sandbox-card">
+      <div>
+        <div class="sandbox-eyebrow">Preview Live</div>
+        <h3>Dividend Discount Sandbox</h3>
+      </div>
+
+      <div class="sandbox-control">
+        <label for="r-slider">Required Return (r) <span id="r-value">10.0%</span></label>
+        <input type="range" id="r-slider" min="8" max="14" step="0.5" value="10">
+      </div>
+
+      <div class="sandbox-control">
+        <label for="g-slider">Growth Rate (g) <span id="g-value">4.0%</span></label>
+        <input type="range" id="g-slider" min="1" max="6" step="0.5" value="4">
+      </div>
+
+      <div class="sandbox-output">
+        <span class="sandbox-output-label">Intrinsic Value <small>Gordon Growth, D₁ = ₹10</small></span>
+        <span class="sandbox-output-value" id="output-value">₹0</span>
+      </div>
+
+      <div class="sandbox-bars" id="sandbox-bars">
+        <div class="bar-col"><div class="bar" id="bar0"></div><span>g−1%</span></div>
+        <div class="bar-col"><div class="bar" id="bar1"></div><span>g−0.5%</span></div>
+        <div class="bar-col current"><div class="bar" id="bar2"></div><span>g</span></div>
+        <div class="bar-col"><div class="bar" id="bar3"></div><span>g+0.5%</span></div>
+        <div class="bar-col"><div class="bar" id="bar4"></div><span>g+1%</span></div>
+      </div>
+
+      <p class="sandbox-note">a taste of how every chapter works once it's live</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var rSlider = document.getElementById('r-slider');
+    var gSlider = document.getElementById('g-slider');
+    var rValue = document.getElementById('r-value');
+    var gValue = document.getElementById('g-value');
+    var outputValue = document.getElementById('output-value');
+    var D1 = 10;
+    var offsets = [-1, -0.5, 0, 0.5, 1];
+    var bars = offsets.map(function (_, i) { return document.getElementById('bar' + i); });
+
+    function fmtPct(n) { return n.toFixed(1) + '%'; }
+    function fmtCurrency(n) { return '₹' + n.toFixed(0); }
+
+    function calc() {
+      var r = parseFloat(rSlider.value) / 100;
+      var g = parseFloat(gSlider.value) / 100;
+
+      rValue.textContent = fmtPct(r * 100);
+      gValue.textContent = fmtPct(g * 100);
+
+      var current = D1 / (r - g);
+      outputValue.textContent = fmtCurrency(current);
+
+      var values = offsets.map(function (off) {
+        var gg = g + off / 100;
+        return D1 / (r - gg);
+      });
+      var max = Math.max.apply(null, values);
+
+      values.forEach(function (v, i) {
+        var pct = Math.max(4, (v / max) * 100);
+        bars[i].style.height = pct + '%';
+      });
+    }
+
+    rSlider.addEventListener('input', calc);
+    gSlider.addEventListener('input', calc);
+    calc();
+  })();
+</script>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <p class="contact-pre">Contact</p>
+  <h2 class="contact-headline">Get in touch</h2>
+  <div class="contact-links">
+    <a href="mailto:infinitybyyam@gmail.com" class="contact-link">↗ Email</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">INFINITY BY YAM</div>
+  <div class="footer-copy">© 2026 Infinity by Yam. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
