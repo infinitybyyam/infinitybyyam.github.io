@@ -34,7 +34,39 @@
     font-size: 16px;
     line-height: 1.6;
     overflow-x: hidden;
+    position: relative;
   }
+
+  /* ── RED ATMOSPHERE (same grid and glow values as the landing page) ── */
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 620px;
+    background-image:
+      linear-gradient(rgba(229,9,20,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(229,9,20,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: absolute;
+    top: 4rem;
+    right: 5%;
+    width: min(450px, 80vw);
+    height: 450px;
+    background: radial-gradient(circle, rgba(229,9,20,0.15) 0%, transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap, .contact-section, footer { position: relative; z-index: 1; }
 
   a { -webkit-tap-highlight-color: transparent; text-decoration: none; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
@@ -81,87 +113,11 @@
 
   .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); }
 
-  .nav-dropdown { position: relative; }
-
-  .nav-dropdown-toggle {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0;
-    transition: color 0.2s ease;
-  }
-
-  .nav-dropdown-toggle:hover,
-  .nav-dropdown-toggle:focus-visible,
-  .nav-dropdown-toggle[aria-expanded="true"] { color: var(--text); }
-
-  .nav-dropdown-caret {
-    font-size: 0.6rem;
-    transition: transform 0.2s ease;
-  }
-
-  .nav-dropdown-toggle[aria-expanded="true"] .nav-dropdown-caret { transform: rotate(180deg); }
-
-  .nav-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 14px);
-    left: 50%;
-    list-style: none;
-    min-width: 200px;
-    background: var(--surface2);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    padding: 0.4rem;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(-50%) translateY(-6px);
-    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-    z-index: 200;
-  }
-
-  .nav-dropdown-menu.open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .nav-dropdown-menu li + li { margin-top: 0.15rem; }
-
-  .nav-dropdown-menu a {
-    display: block;
-    padding: 0.55rem 0.75rem;
-    border-radius: 4px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    text-transform: none;
-    white-space: nowrap;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-
-  .nav-dropdown-menu a:hover,
-  .nav-dropdown-menu a:focus-visible {
-    background: rgba(229,9,20,0.12);
-    color: #fff;
-  }
-
   /* ── MAIN CONTENT WRAPPER ── */
   .page-wrap {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 7rem 6% 6rem;
+    padding: 9rem 6% 6rem;
   }
 
   /* ── HUB HEADER / SEARCH BAR ── */
@@ -170,13 +126,14 @@
     margin-bottom: 2rem;
   }
 
-  .hub-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem, 4vw, 3rem);
-    letter-spacing: 1px;
-    color: #fff;
-    margin-bottom: 1.25rem;
-    line-height: 1;
+  /* Small red label above the search bar, same style as "Basics" on the topic pages */
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #FF5A62;
+    margin-bottom: 1rem;
   }
 
   .filter-bar {
@@ -226,6 +183,69 @@
   .f-chip.active { border-color: var(--red); color: #fff; background: rgba(229,9,20,0.12); }
   .f-chip:disabled { cursor: not-allowed; }
 
+  /* ── TOPIC SECTIONS & CARDS ── */
+  .module-section { margin-bottom: 3.5rem; }
+
+  .module-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .module-heading::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: 1.5rem;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: inherit;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .topic-card:hover, .topic-card:focus-visible {
+    border-color: var(--red);
+    background: var(--surface2);
+    transform: translateY(-2px);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  .card-desc { font-size: 0.95rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
+
+  .card-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .card-link-text { color: var(--text); font-weight: 600; transition: color 0.2s; }
+
   /* ── COMING SOON ── */
   .coming-soon {
     text-align: center;
@@ -256,6 +276,7 @@
     letter-spacing: 1px;
     color: #fff;
   }
+  .topic-card:hover .card-link-text, .topic-card:focus-visible .card-link-text { color: var(--red); }
 
   /* ── CONTACT SECTION ── */
   .contact-section {
@@ -264,6 +285,18 @@
     position: relative;
     overflow: hidden;
     border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .contact-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(500px, 90vw);
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(229,9,20,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    filter: blur(50px);
   }
 
   .contact-pre {
@@ -327,6 +360,9 @@
     letter-spacing: 2px;
   }
 
+  .footer-logo-infinity { color: var(--text); }
+  .footer-logo-byyam { color: var(--red); }
+
   .footer-copy {
     font-size: 0.8rem;
     color: var(--faint);
@@ -348,7 +384,7 @@
       gap: 1.25rem;
     }
 
-    .nav-links a, .nav-dropdown-toggle {
+    .nav-links a {
       font-size: 0.72rem;
       letter-spacing: 0.8px;
     }
@@ -358,8 +394,11 @@
       padding: 7rem 5% 4rem; /* Cuts down the massive top/bottom gaps */
     }
 
+    /* The nav stacks on phones and ends about 120px down, so content starts below it */
+    html { scroll-padding-top: 136px; }
+
     .page-wrap {
-      padding: 5rem 5% 4rem;
+      padding: 9.5rem 5% 4rem;
     }
 
     .contact-section {
@@ -377,67 +416,59 @@
   </a>
   <ul class="nav-links">
     <li><a href="https://infinitybyyam.github.io/">Back to Home</a></li>
-    <li class="nav-dropdown">
-      <button type="button" class="nav-dropdown-toggle" id="valuation-toggle" aria-haspopup="true" aria-expanded="false">
-        Important Links <span class="nav-dropdown-caret">▾</span>
-      </button>
-      <ul class="nav-dropdown-menu" id="valuation-menu">
-        <li><a href="https://www.screener.in/" target="_blank" rel="noopener">Screener.in</a></li>
-        <li><a href="https://valueinvesting.io/" target="_blank" rel="noopener">ValueInvesting.io</a></li>
-        <li><a href="https://tradingeconomics.com/" target="_blank" rel="noopener">TradingEconomics.com</a></li>
-      </ul>
-    </li>
     <li><a href="#contact">Contact</a></li>
   </ul>
 </nav>
-
-<script>
-  (function () {
-    var toggle = document.getElementById('valuation-toggle');
-    var menu = document.getElementById('valuation-menu');
-
-    function closeMenu() {
-      menu.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-    function openMenu() {
-      menu.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-    }
-
-    toggle.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (menu.classList.contains('open')) { closeMenu(); } else { openMenu(); }
-    });
-    document.addEventListener('click', function (e) {
-      if (!menu.contains(e.target) && e.target !== toggle) { closeMenu(); }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { closeMenu(); }
-    });
-  })();
-</script>
 
 <div class="page-wrap">
 
   <!-- HUB HEADER -->
   <header class="hub-header">
-    <h1 class="hub-title">Learning by Yam</h1>
+    <h1 class="eyebrow">Learning</h1>
     <!-- SEARCH & CHIPS BAR (disabled until topics are published) -->
     <div class="filter-bar">
       <input type="text" class="search-input" placeholder="Search topics or keywords..." disabled>
       <div class="filter-chips">
         <button class="f-chip active" disabled>All Topics</button>
+        <button class="f-chip" disabled>Basics</button>
         <button class="f-chip" disabled>Strategic Finance</button>
         <button class="f-chip" disabled>Valuation</button>
       </div>
     </div>
   </header>
 
+  <!-- BASICS -->
+  <section class="module-section" id="basics">
+    <h2 class="module-heading">Basics</h2>
+    <div class="topic-grid">
+
+      <a class="topic-card" href="https://infinitybyyam.github.io/Learning/Basics/what_is_finance.html">
+        <div>
+          <h3 class="card-title">What Is Finance</h3>
+          <p class="card-desc">Meera wants to open her own bakery. Before the doors open, three money questions stand in her way, and together they are what finance is.</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-link-text">Read Topic &rarr;</span>
+        </div>
+      </a>
+
+      <a class="topic-card" href="https://infinitybyyam.github.io/Learning/Basics/reading_business_health.html">
+        <div>
+          <h3 class="card-title">Reading a Company's Health</h3>
+          <p class="card-desc">Five years in, Meera's bakery has its best year yet, and less cash than before. Her books, and a few simple ratios, show why.</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-link-text">Read Topic &rarr;</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
   <!-- COMING SOON -->
   <section class="coming-soon">
     <div class="coming-soon-badge">In Progress</div>
-    <h2 class="coming-soon-title">Topics Coming Soon</h2>
+    <h2 class="coming-soon-title">More Topics Coming Soon</h2>
   </section>
 
 </div>
@@ -453,7 +484,7 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">INFINITY BY YAM</div>
+  <div class="footer-logo"><span class="footer-logo-infinity">INFINITY</span> <span class="footer-logo-byyam">BY YAM</span></div>
   <div class="footer-copy">&copy; 2026 Infinity by Yam. All rights reserved.</div>
 </footer>
 
