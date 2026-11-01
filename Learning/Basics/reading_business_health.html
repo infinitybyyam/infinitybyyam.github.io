@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading a Company's Health · Learning by Yam</title>
+
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Learning/frame.css">
+<script src="https://infinitybyyam.github.io/Learning/frame.js" defer></script>
+
+<style>
+/* This page's own pieces: prose, panels, sliders, tables and bars. Nav, footer, pager, colours and fonts come from frame.css. */
+[hidden] { display: none !important; }
+.prose { max-width: 680px; }
+.prose p { margin: 0 0 1.15rem; color: var(--muted); }
+.prose p strong, .prose em { color: var(--text); }
+.prose strong { font-weight: 600; }
+.prose em { font-style: normal; font-weight: 500; }
+.prose.after { margin-top: 1.6rem; }
+/* Term cards: the term shows, a tap reveals its meaning (same behaviour as Chapter 1's cards) */
+.tgroup { display: flex; align-items: center; gap: 0.6rem; margin: 1.6rem 0 0.7rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text); }
+.tgroup::before { content: ''; width: 18px; height: 3px; background: var(--red); flex-shrink: 0; }
+.tgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.tcard { text-align: left; font-family: var(--body); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1rem 1.1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; min-height: 44px; transition: border-color .2s; }
+.tcard:hover { border-color: rgba(255,255,255,0.28); }
+.tcard[aria-expanded="true"] { border-color: var(--red); }
+.tcard b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; letter-spacing: 1px; line-height: 1.1; color: #fff; }
+.tcard[aria-expanded="true"] b { color: var(--red-text); }
+.tcard .a { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.tcard .hint { font-size: 0.68rem; letter-spacing: 1.4px; text-transform: uppercase; color: var(--faint); margin-top: auto; }
+.tsmall { font-size: 0.82rem; color: var(--faint); margin: 0.9rem 0 0; max-width: 680px; }
+@media (max-width: 640px) { .tgrid { grid-template-columns: minmax(0, 1fr); } }
+.panel-head h3 { margin: 0; }
+
+.panel { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1.25rem, 3vw, 2rem); box-shadow: 0 10px 28px rgba(0,0,0,0.45); }
+.badge { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--red-text); border: 1px solid rgba(255,90,98,0.4); background: rgba(229,9,20,0.1); padding: 0.25rem 0.6rem; border-radius: 2px; margin-bottom: 0.9rem; }
+.panel p.note { font-size: 0.88rem; color: var(--muted); margin: 0.2rem 0 1.3rem; max-width: 640px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.panel-tag { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text); }
+.panel-tag::before { content: ''; display: inline-block; width: 18px; height: 3px; background: var(--red); flex-shrink: 0; }
+.btn { font-family: var(--body); font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; background: var(--black); border: 1px solid rgba(255,255,255,0.14); color: var(--muted); padding: 0.55rem 0.8rem; border-radius: 4px; cursor: pointer; min-height: 40px; transition: color 0.2s ease, border-color 0.2s ease; }
+.btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.seg { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.seg .btn[aria-pressed="true"] { border-color: var(--red); color: #fff; background: rgba(229,9,20,0.12); }
+.seg.years { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
+.seg.years .btn { padding-inline: 0.2rem; white-space: nowrap; }
+@media (max-width: 400px) { .seg.years .btn { font-size: 0.64rem; letter-spacing: 0.4px; } }
+.sub { font-size: 0.8rem; color: var(--muted); margin: 0 0 0.8rem; }
+.read { margin-top: 1rem; padding: 0.9rem 1rem; background: var(--black); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; font-size: 0.92rem; line-height: 1.6; color: var(--text); }
+.read strong { color: #fff; font-weight: 600; }
+
+/* sliders */
+.ctl { margin-bottom: 0.7rem; }
+.ctl label { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; color: var(--text); margin-bottom: 0.1rem; }
+.ctl output { font-variant-numeric: tabular-nums; color: #fff; font-weight: 600; white-space: nowrap; }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 36px; background: transparent; cursor: pointer; margin: 0; }
+input[type="range"]:focus-visible { outline: 2px solid var(--red-text); outline-offset: 2px; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: var(--surface3); border-radius: 3px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--red); border: 3px solid var(--surface); margin-top: -8px; }
+input[type="range"]::-moz-range-track { height: 6px; background: var(--surface3); border-radius: 3px; }
+input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--red); border: 3px solid var(--surface); }
+.check { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--text); min-height: 40px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--red); flex-shrink: 0; }
+
+/* statement table */
+.trow { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem; gap: 0.5rem; align-items: center; width: 100%; text-align: left; font-family: var(--body); font-size: 0.9rem; color: var(--text); background: transparent; border: 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0.6rem 0.4rem; min-height: 44px; }
+button.trow { cursor: pointer; transition: background 0.15s ease; }
+button.trow:hover { background: rgba(255,255,255,0.04); }
+button.trow[aria-pressed="true"] { background: rgba(229,9,20,0.12); }
+.trow.head { font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); min-height: 0; padding-block: 0.3rem; }
+.trow .v { text-align: right; font-variant-numeric: tabular-nums; }
+.trow.tot { font-weight: 600; color: #fff; }
+.trow.grp { color: var(--muted); font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; min-height: 0; padding-top: 0.9rem; border-bottom: 0; }
+
+/* readers */
+.readers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+.readers .btn { text-align: left; text-transform: none; letter-spacing: 0.2px; font-size: 0.85rem; padding: 0.7rem 0.8rem; line-height: 1.35; }
+.readers .btn[aria-pressed="true"] { border-color: var(--red); color: #fff; background: rgba(229,9,20,0.12); }
+.quote { font-size: 1.05rem; line-height: 1.5; color: #fff; margin: 0 0 0.9rem; }
+.chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+.chip { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text); border: 1px solid rgba(229,9,20,0.4); background: rgba(229,9,20,0.1); padding: 0.4rem 0.7rem; border-radius: 3px; }
+
+/* bars */
+.brow { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 3.6rem; gap: 0.6rem; align-items: center; margin-bottom: 0.45rem; font-size: 0.82rem; }
+.brow .lab { color: var(--text); line-height: 1.25; }
+.brow .val { text-align: right; font-variant-numeric: tabular-nums; color: #fff; font-weight: 600; }
+.track { position: relative; height: 14px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--faint); border-radius: 0 4px 4px 0; transition: width 0.2s ease; }
+.fill.hi { background: var(--red); }
+.fill.mid { background: var(--muted); }
+.mark { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px dashed var(--text); }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+.metric { background: var(--black); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 0.7rem 0.75rem; min-width: 0; }
+.metric.flag { border-color: var(--red); }
+.metric .k { font-size: 0.68rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
+.metric .n { font-size: 1.4rem; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 0.15rem; overflow-wrap: anywhere; }
+.metric .p { font-size: 0.74rem; color: var(--muted); margin-top: 0.1rem; line-height: 1.35; }
+.metric .t { display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text); margin-top: 0.25rem; }
+
+/* gauges */
+.gauge { margin-bottom: 0.85rem; }
+.gauge .gh { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.82rem; margin-bottom: 0.3rem; color: var(--text); }
+.gauge .gh b { color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gauge .track { height: 16px; }
+
+/* timeline */
+.tl-row { margin-bottom: 0.9rem; }
+.tl-lab { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; }
+.tl-track { position: relative; height: 28px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.tl-seg { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-inline: 0.5rem; font-size: 0.72rem; font-weight: 600; white-space: nowrap; overflow: hidden; transition: left 0.2s ease, width 0.2s ease; }
+.tl-seg.a { background: var(--surface3); color: var(--text); border-right: 2px solid var(--surface); }
+.tl-seg.b { background: var(--muted); color: var(--black); }
+.tl-seg.c { background: var(--faint); color: var(--black); }
+.tl-seg.g { background: var(--red); color: #fff; }
+.axis { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+
+/* stacked funding bar */
+.stack { display: flex; height: 26px; border-radius: 3px; overflow: hidden; background: var(--surface2); gap: 2px; margin-bottom: 0.6rem; }
+.stack span { display: block; height: 100%; transition: width 0.2s ease; min-width: 0; }
+.s-eq { background: var(--red); }
+.s-loan { background: var(--text); }
+.s-pay { background: var(--faint); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.78rem; color: var(--text); margin-bottom: 0.9rem; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 0.4rem; vertical-align: -1px; }
+
+/* compare table */
+.crow { display: grid; grid-template-columns: minmax(0, 1.25fr) 3.3rem 3.3rem minmax(0, 1.5fr); gap: 0.5rem; align-items: center; padding: 0.45rem 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.82rem; }
+.crow .lab { color: var(--text); line-height: 1.25; }
+.crow .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.crow.head { font-size: 0.66rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+.crow .chg { display: grid; grid-template-columns: minmax(0, 1fr) 3.6rem; gap: 0.4rem; align-items: center; }
+.crow .chg b { text-align: right; font-variant-numeric: tabular-nums; color: #fff; font-weight: 600; }
+.crow.vert { grid-template-columns: minmax(0, 1.25fr) minmax(0, 2fr) 3.4rem; }
+.crow.vert b { text-align: right; font-variant-numeric: tabular-nums; color: #fff; font-weight: 600; }
+
+@media (max-width: 600px) {
+  .panel { padding: 1rem 0.85rem; }
+  .readers { grid-template-columns: minmax(0, 1fr); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .brow { grid-template-columns: 6.6rem minmax(0, 1fr) 3.2rem; font-size: 0.78rem; }
+  .trow { grid-template-columns: minmax(0, 1fr) 3.6rem 3.6rem; font-size: 0.85rem; padding-inline: 0.2rem; }
+  .crow { grid-template-columns: minmax(0, 1.1fr) 2.8rem 2.8rem minmax(0, 1.4fr); font-size: 0.76rem; }
+  .crow .chg { grid-template-columns: minmax(0, 1fr) 3.2rem; }
+  .crow.vert { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) 3.2rem; }
+  .tl-seg { font-size: 0.66rem; padding-inline: 0.3rem; }
+}
+@media (prefers-reduced-motion: reduce) { .fill, .tl-seg, .stack span { transition: none; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Basics</p>
+    <h1>Is the shop <span class="accent">actually healthy?</span></h1>
+    <p class="lead" style="font-size: clamp(1.0rem, 2vw, 1.2rem);">Years fly by in a blur of flour, early dawns, and relentless hard work. Suddenly, Meera’s bakery is five years old. The last loaf of Year 5 is cooling on the rack, and the bakery is finally quiet. By every metric, it was her best year yet: more customers, cafés across town ordering her sourdough, and more profit than ever. Then she sits down with her numbers. Number crunching is never easy, and looking at them, she might actually need to start eating some of her own sourdough just to get by.</p>
+  </header>
+
+  <!-- 1. FIVE YEARS IN -->
+  <section class="s">
+    <h2>How she got here</h2>
+    <div class="prose">
+      <p>When Meera opened five years ago with ₹10 lakh; part her savings, part her partner’s stake, and part a bank loan; every single loaf felt like a high-stakes gamble. Today, the shelves move fast, the ovens hum in a steady rhythm, and annual sales have climbed past forty lakhs.</p>
+      <p>But growth has a way of altering the landscape. To keep up with demand from local cafés, Meera dropped ten lakhs from her saved cash reserves at the start of Year 5 to install a second oven and a bigger kitchen. Paying for growth out of profit the shop has already kept is called <strong>funding from retained earnings</strong>.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Five years at a glance</h3><button type="button" class="btn" id="y-reset">Reset</button></div>
+      <div class="seg" id="y-seg">
+        <button type="button" class="btn" data-k="sales" aria-pressed="true">Sales</button>
+        <button type="button" class="btn" data-k="pat" aria-pressed="false">Profit</button>
+        <button type="button" class="btn" data-k="cash" aria-pressed="false">Cash at year-end</button>
+      </div>
+      <div id="y-bars"></div>
+      <div class="read" id="y-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>Profit up, cash down. Both are true, and her books can explain how. But first Meera needs to know what she is looking at.</p>
+    </div>
+  </section>
+
+  <!-- 2. TWO SHEETS -->
+  <section class="s">
+    <h2>The film and the photograph (Financial Statements)</h2>
+    <div class="prose">
+      <p>Everything Meera needs sits on two sheets of paper. The <strong>income statement</strong> is a film of the whole year: what came in from sales, what went out in costs, and what was left as profit. The <strong>balance sheet</strong> is a photograph of the last evening of the year: what the shop owns, what it owes, and what belongs to the owners.</p>
+      <p>Meera already learned in her first month that profit is not cash sitting in a bank account. Because earnings on paper do not always match physical currency, a "third view" is needed to walk step-by-step from the year's net profit down to the actual cash left in the bank.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>What do Meera's books say?</h3><button type="button" class="btn" id="book-reset">Reset</button></div>
+      <p class="note">All figures in &#8377; lakh. Tap any line to see what it means.</p>
+      <div class="seg" id="book-seg">
+        <button type="button" class="btn" data-tab="pl" aria-pressed="true">The year</button>
+        <button type="button" class="btn" data-tab="bs" aria-pressed="false">The last day</button>
+        <button type="button" class="btn" data-tab="cf" aria-pressed="false">Profit to cash</button>
+      </div>
+      <div id="book-tbl"></div>
+      <div class="read" id="book-note" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>Now look at that ₹3.51 lakh of profit. On its own, the number doesn't tell you much. It’s a lot for a corner shop, but tiny for a factory. When you measure it against the ₹42 lakh of sales it took to make it, the picture clears up: the shop keeps about ₹8 of every ₹100 it sells. That comparison is a <strong>ratio</strong>; a simple benchmark you can hold up against last year, or against the bakery down the road.</p>
+    </div>
+  </section>
+
+  <!-- 3. READERS -->
+  <section class="s">
+    <h2>Four visitors, four questions (Users of Financial Statements)</h2>
+    <div class="prose">
+      <p>That week the books draw a small crowd. Her flour supplier wants to know whether his bills will be paid on time. The bank manager wants to know whether to lend again. Her partner wants to know what his 30% is earning, and why none of it has reached him. And Meera wants to know where to look first.</p>
+      <p>Each question has its own family of ratios: <strong>profitability</strong> for what the shop earns, <strong>activity</strong> for how long money stays stuck, <strong>liquidity</strong> for paying the bills due soon, and <strong>leverage</strong> for whose money is in the shop.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Who is asking?</h3><button type="button" class="btn" id="r-reset">Reset</button></div>
+      <div class="readers" id="readers-btns"></div>
+      <div id="readers-out"></div>
+    </div>
+    <div class="prose after">
+      <p>Meera takes them one at a time, starting with her partner's question: did the shop actually earn well?</p>
+    </div>
+  </section>
+
+  <!-- 4. PROFITABILITY -->
+  <section class="s">
+    <h2>Did the shop earn well? (Profitability Ratios)</h2>
+    <div class="prose">
+      <p>Her partner's question comes first: did the shop actually earn well? To answer it, Meera takes &#8377;100 that came in at the counter and follows it down the income statement, cost by cost, to see what is left at each step. That gives her three margins: how much of each sale the shop keeps.</p>
+      <p>Then she asks a second question, about the money rather than the sales: how hard is the money in the shop working? That gives her three returns.</p>
+    </div>
+    <p class="tgroup">How much of each sale she keeps</p>
+    <div class="tgrid">
+      <button class="tcard" type="button" aria-expanded="false"><b>Gross margin</b><span class="a" hidden>What is left of each &#8377;100 after flour and packing. It shows what a loaf earns before the shop costs anything to run.</span><span class="hint">Tap to see what it means</span></button>
+      <button class="tcard" type="button" aria-expanded="false"><b>Operating margin</b><span class="a" hidden>What is left after wages, rent, power and the oven's wear too. It shows what the shop earns from baking and selling.</span><span class="hint">Tap to see what it means</span></button>
+      <button class="tcard" type="button" aria-expanded="false"><b>Net margin</b><span class="a" hidden>What is left after the bank's interest as well. It is the part of each sale that belongs to the owners.</span><span class="hint">Tap to see what it means</span></button>
+    </div>
+    <p class="tgroup">How hard the money works</p>
+    <div class="tgrid">
+      <button class="tcard" type="button" aria-expanded="false"><b>Return on assets</b><span class="a" hidden>Profit before interest set against everything the shop owns: ovens, stock, cash and money owed by cafés.</span><span class="hint">Tap to see what it means</span></button>
+      <button class="tcard" type="button" aria-expanded="false"><b>Return on capital employed</b><span class="a" hidden>The same profit set against the long-term money from the owners and the bank. It should beat the 12% the bank charges.</span><span class="hint">Tap to see what it means</span></button>
+      <button class="tcard" type="button" aria-expanded="false"><b>Return on equity</b><span class="a" hidden>Profit after interest set against the owners' money alone. It answers the partner's real question: what is my money earning?</span><span class="hint">Tap to see what it means</span></button>
+    </div>
+    <p class="tsmall">On this page each return uses the money in the shop at the start of the year. Some books use the year-end or an average.</p>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Where does each &#8377;100 of sales go?</h3><button type="button" class="btn" id="p-reset">Reset</button></div>
+      <p class="note">These are Year 5's figures. Make flour dearer or wages and rent heavier, and watch each margin and return respond.</p>
+      <div class="ctl"><label for="p-ing">Flour, ingredients, packing <output id="p-ing-o"></output></label><input type="range" id="p-ing" min="30" max="50" step="0.01" value="37.86"></div>
+      <div class="ctl"><label for="p-run">Wages, rent and power <output id="p-run-o"></output></label><input type="range" id="p-run" min="40" max="60" step="0.01" value="49.29"></div>
+      <div id="p-bars"></div>
+      <div class="metrics" id="p-metrics"></div>
+      <div class="read" id="p-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>The shop earns well: every &#8377;100 in it earns about &#8377;23 a year, nearly twice what the bank charges. But each sale keeps less than it did last year. The cafés brought volume at a thinner margin, and they brought something else too: a wait.</p>
+    </div>
+  </section>
+
+  <!-- 5. ACTIVITY -->
+  <section class="s">
+    <h2>Where is the money stuck? (Activity Ratios)</h2>
+    <div class="prose">
+      <p>A counter customer pays before the loaf leaves the shop. A café takes the loaf today and pays a month later. Meanwhile flour waits on the shelf for about two weeks, and since the cafés arrived Meera has started taking a month to pay her own flour supplier instead of two weeks.</p>
+      <p>Activity ratios count this waiting in days: <strong>stock days</strong>, <strong>receivable days</strong> and <strong>payable days</strong>. Add the days flour sits on the shelf to the days the cafés take to pay, take away the days the supplier waits, and you have the stretch Meera has to fund herself. That stretch is the <strong>cash gap</strong>.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>How long is the money stuck?</h3><button type="button" class="btn" id="a-reset">Reset</button></div>
+      <p class="note">Drag the days and see how much money the gap holds up at Year 5's volumes.</p>
+      <div class="seg" id="a-seg">
+        <button type="button" class="btn" data-y="4" aria-pressed="false">Year 4 habits</button>
+        <button type="button" class="btn" data-y="5" aria-pressed="true">Year 5 habits</button>
+      </div>
+      <div class="ctl"><label for="a-inv">Flour sits on the shelf for <output id="a-inv-o"></output></label><input type="range" id="a-inv" min="0" max="60" step="0.1" value="16"></div>
+      <div class="ctl"><label for="a-rec">Cafés take to pay <output id="a-rec-o"></output></label><input type="range" id="a-rec" min="0" max="90" step="0.1" value="30"></div>
+      <div class="ctl"><label for="a-pay">Meera takes to pay her supplier <output id="a-pay-o"></output></label><input type="range" id="a-pay" min="0" max="60" step="0.1" value="30"></div>
+      <div id="a-tl"></div>
+      <div class="read" id="a-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>This year the gap held up &#8377;0.4 lakh of her money. Had the supplier not waited longer, it would have been nearly &#8377;1 lakh. That favour works only while the supplier is happy, and he is exactly the one asking.</p>
+    </div>
+  </section>
+
+  <!-- 6. LIQUIDITY -->
+  <section class="s">
+    <h2>Can she pay the bills due soon? (Liquidity Ratios)</h2>
+    <div class="prose">
+      <p>The supplier's question is about the next few months, not the next few years. Will what comes in soon cover what goes out soon? The <strong>current ratio</strong> sets cash, money owed by cafés and stock against the bills due within the year. The <strong>quick ratio</strong> leaves out stock, because half a bag of flour cannot pay a bill. The <strong>cash ratio</strong> keeps only the cash.</p>
+      <p>Bills due within the year include the supplier and any part of a bank loan to be repaid next year. Meera paid her last instalment at the end of Year 5, so only the supplier is left. You will often hear 2 and 1 quoted as safe levels. Treat them as habits, not laws: a café paid at the counter can live below 1, while a wholesaler with slow customers can struggle at 2.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Can the shop pay what is due soon?</h3><button type="button" class="btn" id="l-reset">Reset</button></div>
+      <div class="seg" id="l-seg"><button type="button" class="btn" data-y="4" aria-pressed="false">Year 4 books</button><button type="button" class="btn" data-y="5" aria-pressed="true">Year 5 books</button></div>
+      <p class="note">Sliders start at Year 5. Raise the stock and see which ratio notices.</p>
+      <div class="ctl"><label for="l-cash">Cash <output id="l-cash-o"></output></label><input type="range" id="l-cash" min="0" max="12" step="0.01" value="5.14"></div>
+      <div class="ctl"><label for="l-rec">Cafés still to pay <output id="l-rec-o"></output></label><input type="range" id="l-rec" min="0" max="4" step="0.01" value="1"></div>
+      <div class="ctl"><label for="l-inv">Stock <output id="l-inv-o"></output></label><input type="range" id="l-inv" min="0" max="4" step="0.01" value="0.7"></div>
+      <div class="ctl"><label for="l-pay">Supplier still to be paid <output id="l-pay-o"></output></label><input type="range" id="l-pay" min="0" max="6" step="0.01" value="1.3"></div>
+      <div class="ctl"><label for="l-due">Loan due within a year <output id="l-due-o"></output></label><input type="range" id="l-due" min="0" max="3" step="0.01" value="0"></div>
+      <div id="l-gauges"></div>
+      <p class="sub">The ratio bars stop at 6; the number beside each bar is the real figure.</p>
+      <label class="check"><input type="checkbox" id="l-incl"> Count what cafés still owe when working out days of cover</label>
+      <div class="read" id="l-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>The supplier can relax: what Meera has on hand covers her bills due soon almost five times. The bank manager is asking a longer question.</p>
+    </div>
+  </section>
+
+  <!-- 7. LEVERAGE -->
+  <section class="s">
+    <h2>Whose money is in the shop? (Leverage Ratios)</h2>
+    <div class="prose">
+      <p>Everything the shop owns was paid for by someone: the owners, the bank or the supplier. <strong>Debt to equity</strong> compares what the shop has borrowed with what the owners have put in and kept. <strong>Debt to assets</strong> shows the bank's slice of the whole. The thinner the owners' slice, the less room there is for a bad year.</p>
+      <p>The bank also asks whether the shop can carry its loan. <strong>Interest cover</strong> is profit before interest divided by interest: at 4, profit could fall to a quarter before the interest went unpaid. <strong>Loan-payment cover</strong> sets what the shop earns before wear and interest against the whole instalment, because the bank wants its money back as well as its interest.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>The bank's share, year by year</h3><button type="button" class="btn" id="v-reset">Reset</button></div>
+      <p class="note">Pick a year to see who had paid for the shop by that year-end. Then make that year's profit before interest fall, and find the point where the bank stops being covered. The fall changes only that year's profit; the balance sheet stays as it was.</p>
+      <div class="seg years" id="v-seg">
+        <button type="button" class="btn" data-y="1" aria-pressed="true">Year 1</button>
+        <button type="button" class="btn" data-y="2" aria-pressed="false">Year 2</button>
+        <button type="button" class="btn" data-y="3" aria-pressed="false">Year 3</button>
+        <button type="button" class="btn" data-y="4" aria-pressed="false">Year 4</button>
+        <button type="button" class="btn" data-y="5" aria-pressed="false">Year 5</button>
+      </div>
+      <div class="ctl"><label for="v-fall">That year's profit before interest falls by <output id="v-fall-o"></output></label><input type="range" id="v-fall" min="0" max="100" step="1" value="0"></div>
+      <div class="stack" id="v-stack" aria-hidden="true"></div>
+      <div class="legend" id="v-legend"></div>
+      <div class="metrics" id="v-metrics"></div>
+      <div class="read" id="v-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>Meera's own answer is simple: the loan is gone, and the bank manager would happily lend again. Whether she should borrow is a question for later. First she lays the years side by side.</p>
+    </div>
+  </section>
+
+  <!-- 8. COMPARE -->
+  <section class="s">
+    <h2>Across the years, down the page (Horizontal and Vertical Analysis)</h2>
+    <div class="prose">
+      <p>Two simple habits make a set of books easier to read. <strong>Horizontal analysis</strong> puts this year beside last year and asks how much each line changed. <strong>Vertical analysis</strong> turns every line into a share of sales, or of everything the shop owns.</p>
+      <p>Shares strip out size, so Meera's small Year 1 can sit beside her busy Year 5, or beside a bigger bakery. And any line growing faster than sales deserves a question.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Which lines moved most?</h3><button type="button" class="btn" id="c-reset">Reset</button></div>
+      <div class="seg" id="c-mode">
+        <button type="button" class="btn" data-m="h" aria-pressed="true">Year 4 to Year 5</button>
+        <button type="button" class="btn" data-m="v" aria-pressed="false">Down the page</button>
+      </div>
+      <div class="seg" id="c-stmt">
+        <button type="button" class="btn" data-s="pl" aria-pressed="true">Income statement</button>
+        <button type="button" class="btn" data-s="bs" aria-pressed="false">Balance sheet</button>
+      </div>
+      <div class="seg" id="c-col" hidden>
+        <button type="button" class="btn" data-c="1" aria-pressed="false">Year 1</button>
+        <button type="button" class="btn" data-c="4" aria-pressed="false">Year 4</button>
+        <button type="button" class="btn" data-c="5" aria-pressed="true">Year 5</button>
+        <button type="button" class="btn" data-c="s" aria-pressed="false">Another bakery</button>
+      </div>
+      <label class="check" id="c-only-wrap"><input type="checkbox" id="c-only"> Show only lines growing faster than sales</label>
+      <div id="c-tbl"></div>
+      <div class="read" id="c-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>Ingredients, wages and wear all outran sales this year. None of them is alarming alone, but together they explain why a 40% jump in sales became an 8% rise in profit.</p>
+    </div>
+  </section>
+
+  <!-- 9. LIMITS -->
+  <section class="s">
+    <h2>Clues, not verdicts (Limits of Ratios)</h2>
+    <div class="prose">
+      <p>Ratios are quick, but they are built from accounting figures with blind spots. A balance sheet is a single evening, and a big purchase or a late payment can make the same shop look very different a day apart.</p>
+      <p>Assets sit in the books at what they cost, less wear, so Meera's first oven now looks worth &#8377;4 lakh though it bakes as well as ever. Two shops can make different accounting choices and report different profits for the same reality. And no ratio has one right level.</p>
+    </div>
+    <div class="panel">
+      <span class="badge">Try it</span>
+      <div class="panel-head"><h3>Same shop, one day apart</h3><button type="button" class="btn" id="t-reset">Reset</button></div>
+      <div class="seg" id="t-seg">
+        <button type="button" class="btn" data-d="0" aria-pressed="true">Last day of Year 4</button>
+        <button type="button" class="btn" data-d="1" aria-pressed="false">Next morning, kitchen paid for</button>
+      </div>
+      <div class="metrics" id="t-metrics"></div>
+      <div class="read" id="t-read" aria-live="polite"></div>
+    </div>
+    <div class="prose after">
+      <p>A ratio shows where to look. A person still has to ask why.</p>
+    </div>
+  </section>
+
+  <!-- 10. WRAP -->
+  <section class="s">
+    <h2>What Meera found</h2>
+    <div class="prose">
+      <p>Back at the counter, Meera puts it all together. The shop earns well: the money in it returns about 23%, far above what the bank charged. But profit rose only 8% while sales rose 40%. Café loaves sell cheaper, the cafés needed more staff, and the new kitchen wears out too.</p>
+      <p>Her bills are safe, covered almost five times, and the bank loan is paid off. What changed is the waiting. The cafés hold a month of their sales, she holds her supplier's money for a month, and &#8377;10 lakh of savings became an oven and a kitchen.</p>
+      <p><strong><em>The shop is healthy. It is also using more of its own cash to grow.</em></strong></p>
+      <p>That is all a health check gives: not a grade, but a place to look. And Meera is already looking at the next thing, a second shop. It will need more money than the till holds, and how she raises it will change how risky the shop becomes.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+  function f(x, d) { return (isFinite(x) ? x : 0).toFixed(d); }
+  function both(el, fn) { el.addEventListener('input', fn); el.addEventListener('change', fn); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+  function setPressed(wrap, attr, val) {
+    var b = wrap.querySelectorAll('button');
+    for (var i = 0; i < b.length; i++) b[i].setAttribute('aria-pressed', String(b[i].getAttribute(attr) === String(val)));
+  }
+  function pct(a, b) { return (b / a - 1) * 100; }
+  var RATE = 0.12;
+
+  /* ---------- Meera's books, Rs lakh (from the numbers sheet) ---------- */
+  var RAW = {
+    1: { sales: 15, cafe: 0,  ing: 6.0,  rent: 3.6, wages: 3.1,   dep: 0.8, interest: 0.36, prin: 0.47, due: 0.53, capex: 0,  cash: 3.47, rec: 0, inv: 0.3, fixed: 7.2, pay: 0.3, loan: 2.53 },
+    2: { sales: 20, cafe: 0,  ing: 7.8,  rent: 3.6, wages: 5.6,   dep: 0.8, interest: 0.30, prin: 0.53, due: 0.59, capex: 0,  cash: 5.64, rec: 0, inv: 0.3, fixed: 6.4, pay: 0.3, loan: 2.0 },
+    3: { sales: 22, cafe: 0,  ing: 8.36, rent: 3.6, wages: 7.74,  dep: 0.8, interest: 0.24, prin: 0.59, due: 0.66, capex: 0,  cash: 7.11, rec: 0, inv: 0.4, fixed: 5.6, pay: 0.4, loan: 1.41 },
+    4: { sales: 30, cafe: 0,  ing: 11.1, rent: 3.6, wages: 11.08, dep: 0.8, interest: 0.17, prin: 0.66, due: 0.75, capex: 0,  cash: 10.5, rec: 0, inv: 0.5, fixed: 4.8, pay: 0.5, loan: 0.75 },
+    5: { sales: 42, cafe: 12, ing: 15.9, rent: 4.8, wages: 15.9,  dep: 1.8, interest: 0.09, prin: 0.75, due: 0,    capex: 10, cash: 4.66, rec: 1, inv: 0.7, fixed: 13,  pay: 1.3, loan: 0 }
+  };
+  /* The Rs 3 lakh loan runs five years at 12%, repaid in equal yearly instalments of about Rs 0.83 lakh at each year-end (the last is Rs 0.84 after rounding).
+     interest = 12% of what is owed at the start of the year; prin = the part of the instalment that repays the loan;
+     due = next year's prin, shown as a current liability. Oven and kitchen wear: a tenth of cost a year. Tax: none. Nothing paid out to owners. */
+  /* The day the shop opened: Rs 2 lakh cash, Rs 8 lakh oven, Rs 3 lakh loan, Rs 7 lakh from the owners. Capital employed = owners' money + bank loan. */
+  var OPEN = { ta: 10, ce: 10, eq: 7, cash: 2, rec: 0, inv: 0, pay: 0 };
+  function derive(r) {
+    var d = {}, k;
+    for (k in r) d[k] = r[k];
+    d.gp = d.sales - d.ing;
+    d.run = d.rent + d.wages;
+    d.ebit = d.gp - d.run - d.dep;
+    d.pat = d.ebit - d.interest;
+    d.ca = d.cash + d.rec + d.inv;
+    d.ta = d.ca + d.fixed;
+    d.later = d.loan - d.due;
+    d.cl = d.pay + d.due;
+    d.eq = d.ta - d.pay - d.loan;
+    d.ce = d.eq + d.loan;
+    d.daily = (d.ing + d.rent + d.wages) / 365;
+    d.invD = d.inv / d.ing * 365;
+    d.recD = d.cafe > 0 ? d.rec / d.cafe * 365 : 0;
+    d.payD = d.pay / d.ing * 365;
+    return d;
+  }
+  var Y = {};
+  for (var yk = 1; yk <= 5; yk++) Y[yk] = derive(RAW[yk]);
+  function opening(y) { return y === 1 ? OPEN : Y[y - 1]; }
+  function roce(y) { return Y[y].ebit / opening(y).ce * 100; }
+  function roa(y) { return Y[y].ebit / opening(y).ta * 100; }
+  function roe(y) { return Y[y].pat / opening(y).eq * 100; }
+  function dscr(d) { return (d.ebit + d.dep) / (d.interest + d.prin); }
+  var A = Y[4], B = Y[5];
+
+  /* ---------- 1. five years ---------- */
+  var yKey = 'sales';
+  var Y_TXT = {
+    sales: function () { return 'Sales grew from <strong>&#8377;' + f(Y[1].sales, 0) + ' lakh</strong> to <strong>&#8377;' + f(Y[5].sales, 0) + ' lakh</strong>, nearly 30% a year. The slow Year 3 grew only ' + f(pct(Y[2].sales, Y[3].sales), 0) + '%. In Year 5 all the growth came from &#8377;' + f(B.cafe, 0) + ' lakh of café sales.'; },
+    pat: function () { return 'Profit after interest dipped to <strong>&#8377;' + f(Y[3].pat, 2) + ' lakh</strong> in the slow Year 3, then recovered to <strong>&#8377;' + f(Y[5].pat, 2) + ' lakh</strong>. In Year 5 it grew ' + f(pct(A.pat, B.pat), 0) + '% while sales grew ' + f(pct(A.sales, B.sales), 0) + '%.'; },
+    cash: function () { return 'Cash built up for four years to <strong>&#8377;' + f(A.cash, 1) + ' lakh</strong>, then fell to <strong>&#8377;' + f(B.cash, 2) + ' lakh</strong> after the &#8377;10 lakh kitchen. The rising profit and the falling cash are both true at once.'; }
+  };
+  function renderYears() {
+    var max = 0, y, h = '';
+    for (y = 1; y <= 5; y++) max = Math.max(max, Y[y][yKey]);
+    for (y = 1; y <= 5; y++) {
+      var v = Y[y][yKey];
+      h += '<div class="brow"><span class="lab">Year ' + y + '</span><span class="track"><span class="fill ' + (y === 5 ? 'hi' : 'mid') + '" style="width:' + (v / max * 100) + '%"></span></span><span class="val">' + f(v, 2) + '</span></div>';
+    }
+    $('y-bars').innerHTML = h;
+    $('y-read').innerHTML = Y_TXT[yKey]();
+  }
+  $('y-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    yKey = b.getAttribute('data-k'); setPressed($('y-seg'), 'data-k', yKey); renderYears();
+  });
+
+  /* ---------- 2. books ---------- */
+  var PL = [
+    ['sales', 'Sales', 'Everything sold in the year, whether paid yet or not. In Year 5 that is ₹30 lakh at the counter and ₹12 lakh to cafés.', ''],
+    ['ing', 'Flour, ingredients, packing', 'What went into the loaves that were sold. Buying in bulk has made each loaf a little cheaper over the years; café loaves sell cheaper, so they keep less.', ''],
+    ['gp', 'Gross profit', 'Sales minus ingredients. What is left to pay for running the shop.', 'tot'],
+    ['rent', 'Rent and power', 'The same ₹3.6 lakh every year until Year 5, when the bigger kitchen and café deliveries add to it.', ''],
+    ['wages', 'Wages', "The bakers, the counter staff and Meera's own pay. Each jump in orders needed another pair of hands. In Year 3 she hired ahead of orders that came a year late.", ''],
+    ['dep', 'Oven wear', 'Ovens wear out. Each year a tenth of what an oven cost is counted as a cost, though no cash leaves the shop. Year 5 adds a tenth of the ₹10 lakh kitchen.', ''],
+    ['ebit', 'Profit before interest', 'What the shop earns from baking and selling, before paying the bank. In Year 1 this was ₹1.5 lakh, 15% on the ₹10 lakh it opened with.', 'tot'],
+    ['interest', 'Interest', '12% a year on what is still owed to the bank at the start of the year: ₹3 lakh in Year 1, ₹0.75 lakh in Year 5. As the loan shrinks, so does the interest.', ''],
+    ['pat', 'Profit', 'What is left for the owners: Meera 70%, her partner 30%. There is no tax in this example.', 'tot']
+  ];
+  var BS = [
+    ['', 'What the shop owns', '', 'grp'],
+    ['cash', 'Cash', 'Money in the till and the bank.', ''],
+    ['rec', 'Cafés still to pay', 'Also called receivables. Loaves already delivered and not yet paid for. Counter customers pay on the spot, so this was zero before the cafés.', ''],
+    ['inv', 'Stock', 'Also called inventory. Flour and packing on the shelf.', ''],
+    ['fixed', 'Ovens and kitchen', 'What the ovens and kitchen cost, less the wear counted so far. The first oven cost ₹8 lakh; the kitchen ₹10 lakh.', ''],
+    ['ta', 'Total assets', 'Everything the shop owns. Cash, money owed by cafés and stock turn into cash within a year, so they are called current assets.', 'tot'],
+    ['', 'What it owes, and what is left', '', 'grp'],
+    ['pay', 'Supplier still to be paid', 'Also called payables. Flour already received and not yet paid for.', ''],
+    ['due', 'Loan due within a year', 'The part of next year\'s instalment that repays the loan itself. Because it must be paid within the year, it counts as a current liability too. At the end of Year 5 it is nil: the last instalment has been paid.', ''],
+    ['later', 'Loan due later', 'The rest of the ₹3 lakh borrowed to open the shop. She pays the bank about ₹0.83 lakh at the end of every year for five years. In the early years more of that goes on interest; each year more of it repays the loan. The last instalment was paid at the end of Year 5.', ''],
+    ['eq', "Owners' money", "What is left when everything owed is taken from everything owned. It began as ₹7 lakh (₹4 lakh from Meera, ₹3 lakh from her partner) and grows with every rupee of profit kept in the shop. Nothing has been paid out yet.", 'tot']
+  ];
+  var CF = [
+    ['cf_open', 'Cash at the start of the year', 'What was in the bank on the first morning of the year.', ''],
+    ['cf_capex', 'Paid for the new oven and kitchen', 'Cash spent on things the shop will use for years. It is not a cost in this year\'s income statement; it shows up there a tenth at a time, as wear.', ''],
+    ['pat', 'Net profit', 'From the income statement: what is left after every cost, interest included. Interest is already taken off here, so it does not appear again below.', ''],
+    ['dep', 'Add back oven wear', 'Wear was taken off profit, but no cash left the shop for it. The cash left years ago, when the oven was bought.', ''],
+    ['cf_wc', 'Money tied up in unpaid café bills and stock', 'Café loaves count as sales the day they are delivered, but the money arrives a month later. Extra stock on the shelf also holds cash. Extra credit from the supplier gives some back. In Year 5 the cafés owe ₹1 lakh and stock rose ₹0.2 lakh, while the supplier waits for ₹0.8 lakh more.', ''],
+    ['cf_prin', 'Loan repaid', 'The part of the instalment that pays back the loan itself. It is not a cost, so it never appears in the income statement, but the cash still leaves the bank.', ''],
+    ['cash', 'Cash at the end of the year', 'The figure on the balance sheet.', 'tot']
+  ];
+  function cfVal(y, k) {
+    var d = Y[y], o = opening(y);
+    if (k === 'cf_open') return o.cash;
+    if (k === 'cf_capex') return -d.capex;
+    if (k === 'cf_wc') return -((d.rec + d.inv - d.pay) - (o.rec + o.inv - o.pay));
+    if (k === 'cf_prin') return -d.prin;
+    return d[k];
+  }
+  var bookTab = 'pl', bookSel = '';
+  function renderBooks() {
+    var rows = bookTab === 'pl' ? PL : (bookTab === 'bs' ? BS : CF);
+    function cell(y, k) { var v = bookTab === 'cf' ? cfVal(y, k) : Y[y][k]; return (bookTab === 'cf' && v > 0.0001 && k !== 'cf_open' && k !== 'cash' ? '+' : '') + f(v, 2).replace('-', '−'); }
+    var h = '<div class="trow head"><span></span><span class="v">Year 4</span><span class="v">Year 5</span></div>', note = null;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (r[3] === 'grp') { h += '<div class="trow grp"><span>' + esc(r[1]) + '</span><span></span><span></span></div>'; continue; }
+      if (r[0] === bookSel) note = r;
+      h += '<button type="button" class="trow ' + r[3] + '" data-k="' + r[0] + '" aria-pressed="' + (bookSel === r[0]) + '"><span>' + esc(r[1]) + '</span><span class="v">' + cell(4, r[0]) + '</span><span class="v">' + cell(5, r[0]) + '</span></button>';
+    }
+    $('book-tbl').innerHTML = h;
+    $('book-note').innerHTML = note ? '<strong>' + esc(note[1]) + '.</strong> ' + esc(note[2])
+      : (bookTab === 'pl' ? 'The year is a film. Tap a line to see what it means.'
+        : bookTab === 'bs' ? 'The last day is a photograph. What the shop owns always equals what it owes plus the owners\' money. Tap a line to see what it means.'
+        : 'Net profit was ₹' + f(B.pat, 2) + ' lakh in Year 5, yet the bank balance fell by ₹' + f(A.cash - B.cash, 2) + ' lakh. Tap a line to see where the cash went.');
+  }
+  $('book-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    bookTab = b.getAttribute('data-tab'); bookSel = '';
+    setPressed($('book-seg'), 'data-tab', bookTab); renderBooks();
+  });
+  $('book-tbl').addEventListener('click', function (e) {
+    var b = e.target.closest('button.trow'); if (!b) return;
+    bookSel = b.getAttribute('data-k'); renderBooks();
+  });
+
+  /* ---------- 3. readers ---------- */
+  var PEOPLE = [
+    { id: 'sup', name: 'The flour supplier', q: 'Will my next bill be paid on time?', fam: ['Liquidity', 'Activity'],
+      say: function () { return 'Her current ratio is <strong>' + f(B.ca / B.cl, 1) + '</strong> and her quick ratio <strong>' + f((B.cash + B.rec) / B.cl, 1) + '</strong> (Year 4: ' + f(A.ca / A.cl, 1) + ' and ' + f((A.cash + A.rec) / A.cl, 1) + ', swollen by the cash saved for the kitchen). She now takes about <strong>' + f(B.payD, 0) + ' days</strong> to pay him, against ' + f(A.payD, 0) + ' a year ago. Slower, but there is plenty of cash behind the bill.'; } },
+    { id: 'bank', name: 'The bank manager', q: 'If I lend more, will I be repaid, and what happens in a bad year?', fam: ['Leverage', 'Profitability'],
+      say: function () { return 'Every instalment was paid on time, and with the last one at the end of Year 5 the shop owes the bank nothing. In that final year, what the shop earned before wear and interest covered the instalment <strong>' + f(dscr(B), 1) + ' times</strong> (Year 4: ' + f(dscr(A), 1) + '). On these numbers there is plenty of room to borrow again.'; } },
+    { id: 'partner', name: 'Her partner', q: 'What is my money earning, and why has nothing been paid out yet?', fam: ['Profitability', 'Liquidity'],
+      say: function () { return 'Profit on the owners\' money at the start of the year was <strong>' + f(roe(5), 0) + '%</strong> (Year 4: ' + f(roe(4), 0) + '%). His 30% of Year 5\'s profit is ₹' + f(B.pat * 0.3, 2) + ' lakh, all kept in the shop. The cash went into repaying the loan and paying for the kitchen, and each ₹100 of sales now keeps ₹' + f(B.pat / B.sales * 100, 1) + ' against ₹' + f(A.pat / A.sales * 100, 1) + '.'; } },
+    { id: 'meera', name: 'Meera', q: 'All four. What do I watch first?', fam: ['Profitability', 'Activity', 'Liquidity', 'Leverage'],
+      say: function () { return 'Two lines moved most. Wages have grown from ' + f(Y[1].wages / Y[1].sales * 100, 0) + '% of sales in Year 1 to <strong>' + f(B.wages / B.sales * 100, 0) + '%</strong>, and cafés now take about <strong>' + f(B.recD, 0) + ' days</strong> to pay, where the counter took none. Neither is a problem yet, and both are worth watching as she grows.'; } }
+  ];
+  var person = 'sup';
+  function renderReaders() {
+    var b = '', i, p = PEOPLE[0];
+    for (i = 0; i < PEOPLE.length; i++) {
+      b += '<button type="button" class="btn" data-p="' + PEOPLE[i].id + '" aria-pressed="' + (PEOPLE[i].id === person) + '">' + esc(PEOPLE[i].name) + '</button>';
+      if (PEOPLE[i].id === person) p = PEOPLE[i];
+    }
+    $('readers-btns').innerHTML = b;
+    var chips = '';
+    for (i = 0; i < p.fam.length; i++) chips += '<span class="chip">' + p.fam[i] + '</span>';
+    $('readers-out').innerHTML = '<p class="quote">“' + esc(p.q) + '”</p><div class="chips">' + chips + '</div><div class="read" style="margin-top:0" aria-live="polite">' + p.say() + '</div>';
+  }
+  $('readers-btns').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    person = b.getAttribute('data-p'); renderReaders();
+  });
+
+  /* ---------- 4. profitability ---------- */
+  var P_ING0 = B.ing / B.sales * 100, P_RUN0 = B.run / B.sales * 100;
+  var pIng = $('p-ing'), pRun = $('p-run');
+  function renderProfit() {
+    var ing = parseFloat(pIng.value), run = parseFloat(pRun.value);
+    $('p-ing-o').textContent = '₹' + f(ing, 1);
+    $('p-run-o').textContent = '₹' + f(run, 1);
+    var dep = B.dep / B.sales * 100, intr = B.interest / B.sales * 100;
+    var gross = 100 - ing, ebit = gross - run - dep, net = ebit - intr;
+    var rows = [
+      ['Sales', 100, ''], ['less ingredients', ing, 'mid'], ['Gross profit', gross, ''],
+      ['less wages, rent, power', run, 'mid'], ['less oven wear', dep, 'mid'], ['Profit before interest', ebit, ''],
+      ['less interest', intr, 'mid'], ['What the shop keeps', net, 'hi']
+    ];
+    var h = '';
+    for (var i = 0; i < rows.length; i++) h += '<div class="brow"><span class="lab">' + rows[i][0] + '</span><span class="track"><span class="fill ' + rows[i][2] + '" style="width:' + clamp(rows[i][1], 0, 100) + '%"></span></span><span class="val">' + f(rows[i][1], 1) + '</span></div>';
+    $('p-bars').innerHTML = h;
+    var o = opening(5), ebitL = ebit / 100 * B.sales, patL = net / 100 * B.sales;
+    var rA = ebitL / o.ta * 100, rC = ebitL / o.ce * 100, rE = patL / o.eq * 100;
+    function m(k, n, p) { return '<div class="metric"><div class="k">' + k + '</div><div class="n">' + n + '</div><div class="p">' + p + '</div></div>'; }
+    $('p-metrics').innerHTML =
+      m('Gross margin', f(gross, 1) + '%', 'Last year: ' + f(A.gp / A.sales * 100, 1) + '%') +
+      m('Operating margin', f(ebit, 1) + '%', 'Last year: ' + f(A.ebit / A.sales * 100, 1) + '%') +
+      m('Net margin', f(net, 1) + '%', 'Last year: ' + f(A.pat / A.sales * 100, 1) + '%') +
+      m('Return on assets', f(rA, 1) + '%', 'Last year: ' + f(roa(4), 1) + '%') +
+      m('Return on capital employed', f(rC, 1) + '%', 'Last year: ' + f(roce(4), 1) + '%') +
+      m('Return on equity', f(rE, 1) + '%', 'Last year: ' + f(roe(4), 1) + '%');
+    var txt = net >= 0
+      ? 'Out of every ₹100 of sales the shop keeps <strong>₹' + f(net, 2) + '</strong> (last year: ₹' + f(A.pat / A.sales * 100, 2) + '). '
+      : 'At these costs the shop loses <strong>₹' + f(-net, 2) + '</strong> on every ₹100 of sales (last year it kept ₹' + f(A.pat / A.sales * 100, 2) + '). ';
+    if (rC < 0) txt += 'Return on capital employed is below zero: the shop is using up money instead of making it.';
+    else if (rC >= RATE * 100) txt += 'Return on capital employed, <strong>' + f(rC, 1) + '%</strong>, is above the 12% the bank charges, so the borrowed money is paying for itself.';
+    else txt += 'Return on capital employed, <strong>' + f(rC, 1) + '%</strong>, has fallen below the 12% the bank charges. At these margins the borrowed money no longer pays for itself.';
+    $('p-read').innerHTML = txt;
+  }
+  both(pIng, renderProfit); both(pRun, renderProfit);
+  $('p-reset').addEventListener('click', function () { pIng.value = P_ING0.toFixed(2); pRun.value = P_RUN0.toFixed(2); renderProfit(); });
+
+  /* ---------- 5. activity ---------- */
+  var aInv = $('a-inv'), aRec = $('a-rec'), aPay = $('a-pay'), A_MAX = 120;
+  function renderActivity() {
+    var inv = parseFloat(aInv.value), rec = parseFloat(aRec.value), pay = parseFloat(aPay.value);
+    $('a-inv-o').textContent = f(inv, 0) + ' days';
+    $('a-rec-o').textContent = f(rec, 0) + ' days';
+    $('a-pay-o').textContent = f(pay, 0) + ' days';
+    var gap = inv + rec - pay, gapShown = Math.max(0, gap);
+    function w(x) { return clamp(x / A_MAX * 100, 0, 100) + '%'; }
+    var h = '<div class="tl-row"><div class="tl-lab">Her side: flour in, loaf out, money back</div><div class="tl-track">' +
+      '<div class="tl-seg a" style="left:0;width:' + w(inv) + '">' + (inv >= 10 ? 'Shelf' : '') + '</div>' +
+      '<div class="tl-seg b" style="left:' + w(inv) + ';width:' + w(rec) + '">' + (rec >= 12 ? 'Café' : '') + '</div></div></div>' +
+      '<div class="tl-row"><div class="tl-lab">The supplier\'s side: how long he waits</div><div class="tl-track">' +
+      '<div class="tl-seg c" style="left:0;width:' + w(pay) + '">' + (pay >= 14 ? 'Supplier' : '') + '</div></div></div>' +
+      '<div class="tl-row"><div class="tl-lab">The stretch Meera pays for herself</div><div class="tl-track">' +
+      '<div class="tl-seg g" style="left:' + w(Math.min(pay, inv + rec)) + ';width:' + w(gapShown) + '">' + (gapShown >= 14 ? f(gap, 0) + ' days' : '') + '</div></div>' +
+      '<div class="axis"><span>0</span><span>30</span><span>60</span><span>90</span><span>120 days</span></div></div>';
+    $('a-tl').innerHTML = h;
+    var held = inv / 365 * B.ing + rec / 365 * B.cafe - pay / 365 * B.ing;
+    var actual = B.inv + B.rec - B.pay;
+    var txt = held >= 0
+      ? 'At Year 5\'s volumes these habits hold up <strong>₹' + f(held, 2) + ' lakh</strong> of Meera\'s own money in flour and unpaid café bills. '
+      : 'At Year 5\'s volumes these habits mean the supplier funds <strong>₹' + f(-held, 2) + ' lakh</strong> more than the flour and café bills tie up, so none of Meera\'s own money is held up. ';
+    txt += 'Year 5\'s books held up ₹' + f(actual, 2) + ' lakh, against nothing in Year 4. ';
+    txt += 'Without the longer supplier credit it would have been ₹' + f(B.inv + B.rec - B.ing * A.payD / 365, 2) + ' lakh.';
+    $('a-read').innerHTML = txt;
+  }
+  function setActivity(y) {
+    var d = Y[y];
+    aInv.value = d.invD.toFixed(1); aRec.value = (y === 5 ? d.recD : 0).toFixed(1); aPay.value = d.payD.toFixed(1);
+    setPressed($('a-seg'), 'data-y', y); renderActivity();
+  }
+  function activityInput() { setPressed($('a-seg'), 'data-y', 0); renderActivity(); }
+  both(aInv, activityInput); both(aRec, activityInput); both(aPay, activityInput);
+  $('a-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    setActivity(parseInt(b.getAttribute('data-y'), 10));
+  });
+
+  /* ---------- 6. liquidity ---------- */
+  var liqYear = 5;
+  var L = { cash: $('l-cash'), rec: $('l-rec'), inv: $('l-inv'), pay: $('l-pay'), due: $('l-due') };
+  var G_MAX = 6;
+  function gauge(name, val, max, mark, txt) {
+    var mk = mark ? '<span class="mark" style="left:' + (mark / max * 100) + '%"></span>' : '';
+    return '<div class="gauge"><div class="gh"><span>' + name + '</span><b>' + txt + '</b></div><div class="track"><span class="fill hi" style="width:' + clamp(val / max * 100, 0, 100) + '%"></span>' + mk + '</div></div>';
+  }
+  function renderLiquidity() {
+    var cash = parseFloat(L.cash.value), rec = parseFloat(L.rec.value), inv = parseFloat(L.inv.value), pay = parseFloat(L.pay.value) + parseFloat(L.due.value);
+    $('l-cash-o').textContent = '₹' + f(cash, 2);
+    $('l-rec-o').textContent = '₹' + f(rec, 2);
+    $('l-inv-o').textContent = '₹' + f(inv, 2);
+    $('l-pay-o').textContent = '₹' + f(parseFloat(L.pay.value), 2);
+    $('l-due-o').textContent = '₹' + f(parseFloat(L.due.value), 2);
+    var incl = $('l-incl').checked;
+    var cover = (cash + (incl ? rec : 0)) / Y[liqYear].daily;
+    var g = '';
+    if (pay > 0) {
+      var cr = (cash + rec + inv) / pay, qr = (cash + rec) / pay, kr = cash / pay;
+      g = gauge('Current ratio', cr, G_MAX, 1, f(cr, 2)) + gauge('Quick ratio', qr, G_MAX, 1, f(qr, 2)) + gauge('Cash ratio', kr, G_MAX, 1, f(kr, 2));
+    } else {
+      g = gauge('Current ratio', 0, G_MAX, 1, 'nothing due') + gauge('Quick ratio', 0, G_MAX, 1, 'nothing due') + gauge('Cash ratio', 0, G_MAX, 1, 'nothing due');
+    }
+    g += gauge('Days of running costs covered', cover, 150, 0, f(cover, 0) + ' days');
+    $('l-gauges').innerHTML = g;
+    var txt;
+    if (pay <= 0) txt = 'With no bill due within the year, these ratios have nothing to measure.';
+    else {
+      var crv = (cash + rec + inv) / pay, qrv = (cash + rec) / pay;
+      txt = 'Take out ₹' + f(inv, 2) + ' lakh of stock and the current ratio of <strong>' + f(crv, 2) + '</strong> becomes a quick ratio of <strong>' + f(qrv, 2) + '</strong>. ';
+      if (crv < 1) txt += 'Even counting stock, the bills due soon are bigger than what is coming in.';
+      else if (qrv < 1) txt += 'The current ratio is above 1, but without stock the shop could pay only ' + f(qrv * 100, 0) + ' paise of every rupee due soon.';
+      else txt += 'Both are above 1, so the bills due soon are covered even without selling any stock.';
+    }
+    txt += ' Cash alone would pay about ' + f(cash / Y[liqYear].daily, 0) + ' days of wages, rent and flour' + (incl ? ', and more once the cafés pay, if they do.' : '.');
+    $('l-read').innerHTML = txt;
+  }
+  function setLiq(y) {
+    var d = Y[y]; liqYear = y;
+    L.cash.value = d.cash; L.rec.value = d.rec; L.inv.value = d.inv; L.pay.value = d.pay; L.due.value = d.due;
+    setPressed($('l-seg'), 'data-y', y); renderLiquidity();
+  }
+  for (var lk in L) both(L[lk], renderLiquidity);
+  $('l-incl').addEventListener('change', renderLiquidity);
+  $('l-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; setLiq(parseInt(b.getAttribute('data-y'), 10)); });
+
+  /* ---------- 7. leverage: Meera's own five year-ends ---------- */
+  var vYear = 1, vFall = $('v-fall');
+  function renderLeverage() {
+    var d = Y[vYear], fall = parseFloat(vFall.value);
+    $('v-fall-o').textContent = f(fall, 0) + '%';
+    var loan = d.loan, tot = d.ta, eq = d.eq, inst = d.interest + d.prin;
+    var ebit = d.ebit * (1 - fall / 100), pat = ebit - d.interest, earned = ebit + d.dep;
+    var icr = ebit / d.interest, lpc = earned / inst;
+    $('v-stack').innerHTML =
+      '<span class="s-eq" style="width:' + (eq / tot * 100) + '%"></span>' +
+      '<span class="s-loan" style="width:' + (loan / tot * 100) + '%"></span>' +
+      '<span class="s-pay" style="width:' + (d.pay / tot * 100) + '%"></span>';
+    $('v-legend').innerHTML = '<span><i class="s-eq"></i>Owners ₹' + f(eq, 2) + '</span><span><i class="s-loan"></i>Bank ₹' + f(loan, 2) + '</span><span><i class="s-pay"></i>Supplier ₹' + f(d.pay, 2) + '</span>';
+    function m(k, n, p, flag, tag) { return '<div class="metric' + (flag ? ' flag' : '') + '"><div class="k">' + k + '</div><div class="n">' + n + '</div><div class="p">' + p + '</div>' + (flag ? '<div class="t">' + tag + '</div>' : '') + '</div>'; }
+    $('v-metrics').innerHTML =
+      m('Debt to equity', f(loan / eq, 2), 'Loan ₹' + f(loan, 2) + ' ÷ owners ₹' + f(eq, 2), false) +
+      m('Debt to assets', f(loan / tot * 100, 0) + '%', 'Loan ₹' + f(loan, 2) + ' ÷ assets ₹' + f(tot, 2), false) +
+      m('Interest cover', f(icr, 1) + '×', 'Profit before interest ₹' + f(ebit, 2) + ' ÷ interest ₹' + f(d.interest, 2), icr < 1, 'Interest not covered') +
+      m('Loan-payment cover', f(lpc, 1) + '×', 'Earned before wear and interest ₹' + f(earned, 2) + ' ÷ instalment ₹' + f(inst, 2), lpc < 1, 'Instalment not covered') +
+      m('Instalment paid', '₹' + f(inst, 2), 'Interest ₹' + f(d.interest, 2) + ' + loan repaid ₹' + f(d.prin, 2), false) +
+      m('Profit', '₹' + f(pat, 2), 'After interest', pat < 0, 'Loss');
+    var txt = 'At the end of Year ' + vYear + ' the owners had <strong>' + f(eq / tot * 100, 0) + '%</strong> of the shop, the bank <strong>' + f(loan / tot * 100, 0) + '%</strong> and the supplier ' + f(d.pay / tot * 100, 0) + '%. ';
+    if (loan <= 0.0001) txt += 'The last instalment was paid that year, so the bank has no share left. ';
+    if (lpc < 1) txt += 'What the shop earned before wear and interest no longer covers the instalment, so part of what the bank is owed would have to come out of savings.';
+    else if (icr < 1) txt += 'Profit before interest no longer covers the interest, so the year shows a loss. Yet the oven\'s wear is not cash, so the cash the shop earned still covers the whole instalment <strong>' + f(lpc, 1) + ' times</strong>. The bank is paid; the owners take the loss.';
+    else txt += 'Profit before interest covered the interest <strong>' + f(icr, 1) + ' times</strong>, and the whole instalment was covered <strong>' + f(lpc, 1) + ' times</strong>.' + (fall === 0 ? ' Push the profit down to find where that breaks.' : '');
+    $('v-read').innerHTML = txt;
+  }
+  function setLev(y) { vYear = y; setPressed($('v-seg'), 'data-y', y); renderLeverage(); }
+  both(vFall, renderLeverage);
+  $('v-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; setLev(parseInt(b.getAttribute('data-y'), 10)); });
+  $('v-reset').addEventListener('click', function () { vFall.value = 0; setLev(1); });
+
+  /* ---------- 8. compare ---------- */
+  var IS_KEYS = [['sales', 'Sales'], ['ing', 'Ingredients'], ['gp', 'Gross profit'], ['rent', 'Rent and power'], ['wages', 'Wages'], ['dep', 'Oven wear'], ['ebit', 'Profit before interest'], ['interest', 'Interest'], ['pat', 'Profit']];
+  var BS_KEYS = [['cash', 'Cash'], ['rec', 'Cafés still to pay'], ['inv', 'Stock'], ['fixed', 'Ovens and kitchen'], ['ta', 'Total assets'], ['pay', 'Supplier still to be paid'], ['due', 'Loan due within a year'], ['later', 'Loan due later'], ['eq', "Owners' money"]];
+  /* Made-up figures for comparison only, as shares: not Meera's shop */
+  var SAMPLE = { sales: 100, ing: 34, gp: 66, rent: 10, wages: 40, dep: 4, ebit: 12, interest: 2, pat: 10,
+                 cash: 8, rec: 6, inv: 4, fixed: 82, ta: 100, pay: 8, due: 4, later: 26, loan: 30, eq: 62 };
+  var cMode = 'h', cStmt = 'pl', cCol = '5', H_MAX = 200;
+  function renderCompare() {
+    var keys = cStmt === 'pl' ? IS_KEYS : BS_KEYS, h = '', i, k;
+    var g = pct(A.sales, B.sales);
+    $('c-only-wrap').hidden = cMode !== 'h';
+    $('c-col').hidden = cMode !== 'v';
+    if (cMode === 'h') {
+      var faster = [];
+      h += '<div class="crow head"><span>Line</span><span class="v">Y4</span><span class="v">Y5</span><span>Change</span></div>';
+      for (i = 0; i < keys.length; i++) {
+        k = keys[i][0];
+        var a = A[k], b = B[k], isNew = a <= 0 && b > 0, ch = a > 0 ? pct(a, b) : null;
+        var fast = k !== 'sales' && (isNew || (ch !== null && ch > g + 0.05));
+        if (fast) faster.push(keys[i][1].toLowerCase());
+        if ($('c-only').checked && !fast) continue;
+        var wd = isNew ? 100 : clamp(Math.abs(ch === null ? 0 : ch) / H_MAX * 100, 0, 100);
+        var lab = isNew ? 'new' : (ch === null ? '–' : (ch >= 0 ? '+' : '−') + f(Math.abs(ch), 0) + '%');
+        h += '<div class="crow"><span class="lab">' + esc(keys[i][1]) + '</span><span class="v">' + f(a, 2) + '</span><span class="v">' + f(b, 2) + '</span><span class="chg"><span class="track"><span class="fill ' + (fast ? 'hi' : 'mid') + '" style="width:' + wd + '%"></span><span class="mark" style="left:' + (g / H_MAX * 100) + '%"></span></span><b>' + lab + '</b></span></div>';
+      }
+      $('c-tbl').innerHTML = h;
+      var list = faster.length > 1 ? faster.slice(0, -1).join(', ') + ' and ' + faster[faster.length - 1] : faster.join('');
+      $('c-read').innerHTML = 'The dashed line marks sales growth, <strong>+' + f(g, 0) + '%</strong>. Lines growing faster: <strong>' + esc(list) + '</strong>. ' + (cStmt === 'pl'
+        ? 'Ingredients grew faster because café loaves sell cheaper, wages because the cafés needed another baker and a delivery hand, and wear more than doubled with the new kitchen. That is why profit grew so much more slowly than sales.'
+        : 'The kitchen, the cafés\' unpaid bills and the longer supplier credit all grew far faster than sales, while cash more than halved and the loan kept shrinking. Those lines show where the money went.');
+    } else {
+      var base = cStmt === 'pl' ? 'sales' : 'ta';
+      h += '<div class="crow vert head"><span>Line</span><span>Share of ' + (cStmt === 'pl' ? 'sales' : 'total assets') + '</span><span class="v">%</span></div>';
+      for (i = 0; i < keys.length; i++) {
+        k = keys[i][0];
+        var p = cCol === 's' ? SAMPLE[k] : Y[parseInt(cCol, 10)][k] / Y[parseInt(cCol, 10)][base] * 100;
+        h += '<div class="crow vert"><span class="lab">' + esc(keys[i][1]) + '</span><span class="track"><span class="fill ' + ((k === 'pat' || k === 'eq') ? 'hi' : 'mid') + '" style="width:' + clamp(p, 0, 100) + '%"></span></span><b>' + f(p, 1) + '</b></div>';
+      }
+      $('c-tbl').innerHTML = h;
+      var txt;
+      if (cCol === 's') txt = 'This other bakery is made up for comparison; its figures are not Meera\'s. ' + (cStmt === 'pl'
+        ? 'It spends less of each ₹100 on ingredients (34 against Meera\'s ' + f(B.ing / B.sales * 100, 1) + ' in Year 5) and keeps more as profit (10 against ' + f(B.pat / B.sales * 100, 1) + '). A gap like that is a prompt to ask why.'
+        : 'Most of what it owns is ovens and premises, and the bank has a far bigger share of it than in Meera\'s shop (30 against ' + f(B.loan / B.ta * 100, 1) + '). Different shapes, each with its own risks.');
+      else txt = cStmt === 'pl'
+        ? 'Wages took ' + f(Y[1].wages / Y[1].sales * 100, 0) + ' of every ₹100 in Year 1 and ' + f(B.wages / B.sales * 100, 0) + ' in Year 5, while ingredients and rent took less. Switch years and watch which bars move.'
+        : 'Cash was ' + f(A.cash / A.ta * 100, 0) + '% of everything the shop owned at the end of Year 4 and ' + f(B.cash / B.ta * 100, 0) + '% a year later, once the kitchen was bought. Switch years and watch which bars move.';
+      $('c-read').innerHTML = txt;
+    }
+  }
+  $('c-mode').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; cMode = b.getAttribute('data-m'); setPressed($('c-mode'), 'data-m', cMode); renderCompare(); });
+  $('c-stmt').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; cStmt = b.getAttribute('data-s'); setPressed($('c-stmt'), 'data-s', cStmt); renderCompare(); });
+  $('c-col').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; cCol = b.getAttribute('data-c'); setPressed($('c-col'), 'data-c', cCol); renderCompare(); });
+  $('c-only').addEventListener('change', renderCompare);
+
+  /* ---------- 9. limits: one day apart ---------- */
+  var tDay = 0;
+  function renderLimits() {
+    var spent = tDay === 1 ? 10 : 0;
+    var cash = A.cash - spent, fixed = A.fixed + spent, ca = cash + A.rec + A.inv;
+    var cr = ca / A.cl, kr = cash / A.cl;
+    function m(k, n, p, flag) { return '<div class="metric' + (flag ? ' flag' : '') + '"><div class="k">' + k + '</div><div class="n">' + n + '</div><div class="p">' + p + '</div></div>'; }
+    $('t-metrics').innerHTML =
+      m('Current ratio', f(cr, 1), tDay ? 'the day before: ' + f(A.ca / A.cl, 1) : 'the next morning: ' + f((A.ca - 10) / A.cl, 1), tDay === 1) +
+      m('Cash ratio', f(kr, 1), tDay ? 'the day before: ' + f(A.cash / A.cl, 1) : 'the next morning: ' + f((A.cash - 10) / A.cl, 1), tDay === 1) +
+      m('Cash', '₹' + f(cash, 1), 'lakh', false) +
+      m('Ovens and kitchen', '₹' + f(fixed, 1), 'lakh', false) +
+      m('Total assets', '₹' + f(A.ta, 1), 'lakh, unchanged', false) +
+      m('Profit that year', '₹' + f(A.pat, 2), 'lakh, unchanged', false);
+    $('t-read').innerHTML = tDay === 0
+      ? 'On the last day of Year 4 the current ratio is <strong>' + f(cr, 0) + '</strong>. It looks like a shop flooded with spare cash, because the ₹10.5 lakh saved for the kitchen is still sitting in the bank, earning nothing.'
+      : 'One morning later nothing about the business has changed, yet the current ratio has fallen from ' + f(A.ca / A.cl, 0) + ' to <strong>' + f(cr, 1) + '</strong>. Cash became an oven. A reader who sees only one day sees only one frame of the film.';
+  }
+  $('t-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; tDay = parseInt(b.getAttribute('data-d'), 10); setPressed($('t-seg'), 'data-d', tDay); renderLimits(); });
+
+  /* ---------- term cards: tap to reveal, tap again to hide ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.tcard'), function (c) {
+    c.addEventListener('click', function () {
+      var open = c.getAttribute('aria-expanded') === 'true';
+      c.setAttribute('aria-expanded', open ? 'false' : 'true');
+      c.querySelector('.a').hidden = open;
+      c.querySelector('.hint').hidden = !open;
+    });
+  });
+
+  /* ---------- reset buttons: each panel back to how it opened ---------- */
+  $('y-reset').addEventListener('click', function () { yKey = 'sales'; setPressed($('y-seg'), 'data-k', yKey); renderYears(); });
+  $('book-reset').addEventListener('click', function () { bookTab = 'pl'; bookSel = ''; setPressed($('book-seg'), 'data-tab', bookTab); renderBooks(); });
+  $('r-reset').addEventListener('click', function () { person = 'sup'; renderReaders(); });
+  $('a-reset').addEventListener('click', function () { setActivity(5); });
+  $('l-reset').addEventListener('click', function () { $('l-incl').checked = false; setLiq(5); });
+  $('c-reset').addEventListener('click', function () {
+    cMode = 'h'; cStmt = 'pl'; cCol = '5'; $('c-only').checked = false;
+    setPressed($('c-mode'), 'data-m', cMode); setPressed($('c-stmt'), 'data-s', cStmt); setPressed($('c-col'), 'data-c', cCol); renderCompare();
+  });
+  $('t-reset').addEventListener('click', function () { tDay = 0; setPressed($('t-seg'), 'data-d', tDay); renderLimits(); });
+
+  /* ---------- start ---------- */
+  pIng.value = P_ING0.toFixed(2); pRun.value = P_RUN0.toFixed(2);
+  renderYears(); renderBooks(); renderReaders(); renderProfit(); setActivity(5); setLiq(5); setLev(1); renderCompare(); renderLimits();
+})();
+</script>
+</body>
+</html>
