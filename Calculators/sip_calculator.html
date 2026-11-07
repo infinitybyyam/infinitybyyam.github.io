@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIP Calculator · Infinity by Yam</title>
+<link rel="icon" type="image/png" sizes="32x32" href="https://infinitybyyam.github.io/favicon-32.png">
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Calculators/calc-frame.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 2rem; align-items: start; }
+
+  /* CURRENCY AND NUMBER STYLE */
+  .aka { color: var(--muted); font-size: .95rem; margin: -.4rem 0 1rem; }
+  .setup { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1rem; padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .setup label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+  .setup select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; padding: .5rem .55rem; font: 600 .9rem 'DM Sans', sans-serif; cursor: pointer; }
+  .setup select:focus { outline: none; border-color: var(--red); }
+  .cur-note { grid-column: 1 / -1; font-size: .78rem; color: var(--faint); line-height: 1.5; }
+  .cur-note.warn { color: #ff8a90; }
+  .field-note { font-size: .78rem; color: #ff8a90; margin-top: .35rem; line-height: 1.5; }
+  .cross { padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .switch-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .switch-label { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .seg button { background: transparent; color: var(--muted); border: none; padding: .45rem 1rem; font: 600 .8rem 'DM Sans', sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+  .seg button.on { background: var(--red); color: #fff; }
+  .cross-body { margin-top: 1.1rem; }
+  .cross-body[hidden] { display: none; }
+  .inv-pick { margin-bottom: 1.1rem; }
+  .inv-pick label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+  .inv-pick select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; padding: .5rem .55rem; font: 600 .9rem 'DM Sans', sans-serif; cursor: pointer; }
+  .inv-pick select:focus { outline: none; border-color: var(--red); }
+  .fx-note { font-size: .78rem; color: var(--faint); line-height: 1.5; margin-top: -.6rem; }
+  .rows li[hidden] { display: none; }
+  .tax-row { border-top: 1px solid var(--line); margin-top: .5rem; padding-top: 1rem; }
+  .tax-row + details.group { border-top: none; margin-top: 0; padding-top: .9rem; }
+  details.group[hidden] { display: none; }
+  .taxnote { font-size: .78rem; color: var(--faint); margin: -.4rem 0 1.1rem; line-height: 1.5; }
+
+  /* RESULTS */
+  .headline { border-left: 3px solid var(--red); padding: .25rem 0 .25rem 1rem; margin: 1rem 0 1.5rem; }
+  .headline .lbl { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .headline .big { overflow-wrap: anywhere; font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.6rem, 7vw, 3.8rem); line-height: 1; color: var(--red); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .headline .sub { font-size: .85rem; color: var(--muted); }
+  .rows { list-style: none; }
+  .rows li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+  .rows li:first-child { border-top: 1px solid var(--line); }
+  .rows .k { font-size: .9rem; color: var(--muted); min-width: 0; }
+  .rows .k small { display: block; font-size: .75rem; color: var(--faint); line-height: 1.4; }
+  .rows .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; flex-shrink: 0; max-width: 60%; }
+  .rows .v small { display: block; font-weight: 400; font-size: .75rem; color: var(--faint); }
+  .rows li.minor .k, .rows li.minor .v { color: var(--faint); font-size: .82rem; }
+  .rows li.strong .k { color: var(--text); }
+  .rows li.strong .v { color: #fff; }
+  .rows .neg { color: #ff6b72; }
+
+  .range { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .6rem; margin-top: 1.5rem; }
+  .range > div { background: var(--surface2); border: 1px solid var(--line); border-radius: 4px; padding: .7rem .6rem; text-align: center; min-width: 0; }
+  .range > div.mid { border-color: rgba(229,9,20,.45); background: rgba(229,9,20,.06); }
+  .range .r { font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--faint); }
+  .range .n { font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; letter-spacing: .5px; line-height: 1.1; overflow-wrap: break-word; }
+  .range-cap { font-size: .8rem; color: var(--faint); margin-top: .5rem; }
+
+  .msg { display: none; background: rgba(229,9,20,.08); border: 1px solid rgba(229,9,20,.35); border-radius: 4px; padding: 1rem; color: var(--text); font-size: .92rem; margin-top: 1rem; }
+  .invalid .msg { display: block; }
+  .invalid .needs-valid { display: none; }
+
+  /* CHART: full width below the inputs and results */
+  .chart-wide { margin-top: 2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .78rem; color: var(--muted); margin: .5rem 0 .75rem; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: .4rem; border-radius: 2px; }
+  #chart { width: 100%; height: auto; display: block; }
+  #chart text { font-family: 'DM Sans', sans-serif; font-size: 11px; fill: var(--faint); }
+  .tip { font-size: .8rem; color: var(--muted); min-height: 1.3em; margin-top: .4rem; font-variant-numeric: tabular-nums; }
+
+  details.table { margin-top: 1.25rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  details.table summary { cursor: pointer; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .tbl-wrap { overflow-x: auto; margin-top: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: .45rem .4rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--faint); font-weight: 600; font-size: .7rem; letter-spacing: .5px; text-transform: uppercase; }
+
+  /* Desktop: the results travel with you while the inputs are longer (for example with tax assumptions open) */
+  @media (min-width: 901px) {
+    #results-col { position: sticky; align-self: start; }
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .range .n { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<script src="https://infinitybyyam.github.io/Calculators/calc-frame.js"></script>
+
+<main class="page">
+  <div class="glow"></div>
+  <div class="section-label">Calculators</div>
+  <h1>SIP <span class="accent">Calculator</span></h1>
+  <p class="aka">Systematic Investment Plan, also called a Monthly Investment Plan.</p>
+  <p class="intro">Enter your monthly amount and your own assumptions. See what a SIP may grow to, what fund costs and tax take out of it, and what the money left in your hand is worth in today's money.</p>
+
+  <div class="layout">
+    <!-- INPUTS -->
+    <section class="card" aria-label="Your numbers">
+      <div class="eyebrow">Your numbers</div>
+      <p class="hint">Example values. Replace them with yours.</p>
+
+      <div class="setup">
+        <div>
+          <label for="cur">Your currency</label>
+          <select id="cur">
+            <option value="INR">₹ Rupee</option>
+            <option value="USD">$ US Dollar</option>
+            <option value="EUR">€ Euro</option>
+            <option value="GBP">£ Pound</option>
+            <option value="JPY">¥ Yen</option>
+          </select>
+        </div>
+        <div>
+          <label for="sys">Show numbers in</label>
+          <select id="sys">
+            <option value="lakh">Lakhs</option>
+            <option value="mil">Millions</option>
+          </select>
+        </div>
+        <p class="cur-note" id="cur-note"></p>
+      </div>
+
+      <div class="cross">
+        <div class="switch-row">
+          <span class="switch-label" id="cross-label">Investing in another currency?</span>
+          <div class="seg" role="group" aria-labelledby="cross-label">
+            <button type="button" data-cross="no" class="on" aria-pressed="true">No</button>
+            <button type="button" data-cross="yes" aria-pressed="false">Yes</button>
+          </div>
+        </div>
+        <div class="cross-body" id="cross-body" hidden>
+          <div class="inv-pick">
+            <label for="inv">You invest in</label>
+            <select id="inv"></select>
+          </div>
+          <div class="field" data-key="fx"></div>
+          <p class="fx-note" id="fx-note"></p>
+        </div>
+      </div>
+
+      <div class="field" data-key="monthly"></div>
+      <div class="field" data-key="years"></div>
+      <div class="field" data-key="stepup"></div>
+      <div class="field" data-key="ret"></div>
+      <div class="field" data-key="exp"></div>
+      <div class="field" data-key="infl"></div>
+
+      <div class="switch-row tax-row">
+        <span class="switch-label" id="tax-label">Include tax</span>
+        <div class="seg" role="group" aria-labelledby="tax-label">
+          <button type="button" data-tax="on" class="on" aria-pressed="true">On</button>
+          <button type="button" data-tax="off" aria-pressed="false">Off</button>
+        </div>
+      </div>
+      <details class="group" id="taxgroup">
+        <summary>Tax assumptions</summary>
+        <p class="taxnote" id="taxnote"></p>
+        <div class="field" data-key="ltcg"></div>
+        <div class="field" data-key="exempt"></div>
+        <div class="field" data-key="stcg"></div>
+        <div class="field" data-key="cess"></div>
+        <div class="field" data-key="ltmonths"></div>
+      </details>
+    </section>
+
+    <!-- RESULTS -->
+    <div id="results-col">
+      <section class="card" id="results" aria-live="polite">
+        <div class="eyebrow">Projection</div>
+        <h2>What it may be worth</h2>
+        <div class="msg" id="msg">Fix the highlighted input to see the projection.</div>
+
+        <div class="needs-valid">
+          <div class="headline">
+            <div class="lbl">In your hand, in today's money</div>
+            <div class="big" id="o-real">–</div>
+            <div class="sub" id="o-real-sub"></div>
+          </div>
+
+          <ul class="rows">
+            <li><span class="k">Total you put in</span><span class="v" id="o-in"></span></li>
+            <li><span class="k">Value with no costs and no tax<small>The figure usually quoted</small></span><span class="v" id="o-gross"></span></li>
+            <li class="minor"><span class="k">What the common shortcut shows<small>It divides the yearly return by 12, which gives more than the yearly return you entered</small></span><span class="v" id="o-common"></span></li>
+            <li><span class="k">Value after fund costs</span><span class="v" id="o-net"></span></li>
+            <li class="minor" id="row-fx" hidden><span class="k">Currency movement, included above<small id="o-fx-note"></small></span><span class="v" id="o-fx"></span></li>
+            <li><span class="k">Tax when you sell<small id="o-tax-split"></small></span><span class="v" id="o-tax"></span></li>
+            <li class="strong"><span class="k">What reaches your hand</span><span class="v" id="o-hand"></span></li>
+            <li class="strong"><span class="k">Worth in today's money<small id="o-infl-note"></small></span><span class="v" id="o-real2"></span></li>
+          </ul>
+
+          <div class="range" id="range"></div>
+          <p class="range-cap">In today's money, if the yearly return comes in 2 points lower or higher than you entered.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+    <section class="card chart-wide" id="chart-card">
+      <div class="eyebrow">Year by year</div>
+      <h2>How it builds up</h2>
+      <div class="needs-valid">
+        <div class="legend">
+          <span><i style="background:#6e6e73"></i>Put in so far</span>
+          <span><i style="background:#f5f5f7"></i>Value after costs, before tax</span>
+          <span><i style="background:#E50914"></i>Same value in today's money</span>
+        </div>
+        <svg id="chart" viewBox="0 0 600 300" role="img" aria-label="Year by year chart"></svg>
+        <div class="tip" id="tip">Tap or hover on the chart to see a year.</div>
+
+        <details class="table">
+          <summary>Show the year-by-year table</summary>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Year</th><th>Put in</th><th>Value</th><th>Today's money</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  <section class="card disclaimer" style="margin-top:2rem">
+    <div class="eyebrow">Please read</div>
+    <p>This is a projection built only from the numbers and assumptions you entered. Real returns, inflation and tax rules will be different, and the actual result can be much better or much worse. It is not investment advice and does not refer to any particular fund.</p>
+  </section>
+
+  <section class="card how">
+    <div class="eyebrow">How this is calculated</div>
+    <h2>The method, in plain words</h2>
+    <p><strong>When money goes in.</strong> One instalment at the start of every month. Everything is sold at the end of the last month.</p>
+    <p><strong>How it grows.</strong> The fund's yearly cost is taken off the yearly return, and what is left is turned into a true monthly rate, so twelve months of growth add up exactly to that yearly figure. A real fund charges its cost a little every day; the difference from this shortcut is small.</p>
+    <p><strong>Step-up.</strong> The monthly amount goes up by your step-up percentage at the start of each new year.</p>
+    <p><strong>Tax.</strong> Switch tax off to see the result before any tax; switch it back on and your tax values return. Each instalment is checked on its own. If it was held longer than the long-term period, its gain is long-term; otherwise short-term. Long-term gains above the exempt amount are taxed at the long-term rate, short-term gains at the short-term rate, and cess is added on top. Surcharge is not included. The calculator assumes you sell everything in one financial year, so the exempt amount is used once. Selling across several years would use it more than once and lower the tax, so the tax shown here is, if anything, a little high.</p>
+    <p><strong>Today's money.</strong> What reaches your hand is divided by inflation compounded over the full period. It tells you what that money would buy at today's prices.</p>
+    <p><strong>Currency.</strong> Choosing a currency changes only the symbol and how numbers are written. Nothing is converted, so enter every amount in the currency you choose. For rupees the tax settings start with example values; for other currencies they start at zero, because tax depends on where you live. Tax rules change, so always enter the rates that apply to you.</p>
+    <p><strong>Investing in another currency.</strong> When this is switched on, you put money in and get results in your own currency, but the investment grows in the other one. Each year the fund's return after costs is combined with your exchange-rate change: (1 + return) × (1 + yearly change) − 1. If your currency weakens, this adds to your return; if it strengthens, it takes away. Real exchange rates jump around rather than moving by the same amount every year. For rupees, the tax settings switch to example values for shares held abroad, which are often taxed differently from local funds. Enter the rates that apply to you. Fees for converting money and tax collected when money is sent abroad are not included.</p>
+    <p><strong>Why the common shortcut shows more.</strong> A common shortcut takes a 12% yearly return as 1% a month. Compounded, 1% a month is about 12.7% a year, so its answer is higher than the return you typed. Calculators that use it also usually leave out fund costs, tax and inflation.</p>
+  </section>
+
+  <div data-calc-end></div>
+</main>
+
+
+<script>
+// CALC-START
+var FIELDS = {
+  monthly:  { label: 'Monthly SIP', cur: true, suf: '', def: 10000, min: 1, max: 100000000, sMin: 500, sMax: 200000, step: 500, whole: true, err: '' },
+  years:    { label: 'Years', pre: '', suf: 'yrs', def: 20, min: 1, max: 50, sMin: 1, sMax: 40, step: 1, whole: true, err: 'Enter whole years between 1 and 50.' },
+  stepup:   { label: 'Yearly step-up', pre: '', suf: '%', def: 0, min: 0, max: 100, sMin: 0, sMax: 25, step: 1, err: 'Enter a step-up between 0% and 100%.' },
+  ret:      { label: 'Yearly return, before costs', pre: '', suf: '%', def: 12, min: -100, max: 100, sMin: 0, sMax: 20, step: 0.5, err: 'Enter a yearly return between -100% and 100%.' },
+  exp:      { label: "Fund's yearly cost", pre: '', suf: '%', def: 1, min: 0, max: 10, sMin: 0, sMax: 3, step: 0.05, err: 'Enter a yearly cost between 0% and 10%.' },
+  infl:     { label: 'Yearly inflation', pre: '', suf: '%', def: 6, min: 0, max: 100, sMin: 0, sMax: 12, step: 0.5, err: 'Enter inflation between 0% and 100%.' },
+  ltcg:     { label: 'Long-term gains tax', pre: '', suf: '%', def: 12.5, min: 0, max: 50, sMin: 0, sMax: 30, step: 0.5, err: 'Enter a rate between 0% and 50%.' },
+  exempt:   { label: 'Long-term gains tax-free', cur: true, suf: '', def: 125000, min: 0, max: 1000000, sMin: 0, sMax: 500000, step: 5000, whole: true, err: 'Enter an amount between ₹0 and ₹10,00,000.' },
+  stcg:     { label: 'Short-term gains tax', pre: '', suf: '%', def: 20, min: 0, max: 50, sMin: 0, sMax: 40, step: 0.5, err: 'Enter a rate between 0% and 50%.' },
+  cess:     { label: 'Cess on tax', pre: '', suf: '%', def: 4, min: 0, max: 10, sMin: 0, sMax: 10, step: 0.5, err: 'Enter cess between 0% and 10%.' },
+  fx:       { label: 'Yearly change in exchange rate', pre: '', suf: '%', def: 0, min: -50, max: 50, sMin: -10, sMax: 10, step: 0.5, err: 'Enter a yearly change between -50% and 50%.' },
+  ltmonths: { label: 'Months to count as long-term', pre: '', suf: 'mo', def: 12, min: 0, max: 60, sMin: 0, sMax: 36, step: 1, whole: true, err: 'Enter whole months between 0 and 60.' }
+};
+
+// p: monthly, years, stepup, ret, exp, infl, ltcg, exempt, stcg, cess, ltmonths (percentages as numbers, e.g. 12)
+function project(p) {
+  var n = p.years * 12;
+  // Investing in another currency: each year's growth is multiplied by (1 + yearly exchange-rate change).
+  var fxf = p.cross ? Math.max(0, 1 + p.fx / 100) : 1;
+  var fxm = Math.pow(fxf, 1 / 12);
+  var r0 = Math.pow(Math.max(0, 1 + (p.ret - p.exp) / 100), 1 / 12) - 1;
+  var r = (1 + r0) * fxm - 1;
+  var rg = Math.pow(Math.max(0, 1 + p.ret / 100), 1 / 12) * fxm - 1;
+  var rc = (1 + p.ret / 1200) * fxm - 1;
+  var valueNoFx = 0;
+  var invested = 0, value = 0, gross = 0, common = 0, lt = 0, st = 0;
+  var amt = p.monthly;
+  var yearly = [];
+  for (var m = 0; m < n; m++) {
+    if (m > 0 && m % 12 === 0) amt = amt * (1 + p.stepup / 100);
+    var held = n - m;
+    var v = amt * Math.pow(1 + r, held);
+    invested += amt; value += v;
+    valueNoFx += amt * Math.pow(1 + r0, held);
+    gross += amt * Math.pow(1 + rg, held);
+    common += amt * Math.pow(1 + rc, held);
+    if (held > p.ltmonths) lt += v - amt; else st += v - amt;
+  }
+  // year-by-year: value at end of each year of what has gone in so far (after costs, before tax)
+  var put = 0, a2 = p.monthly;
+  for (var y = 1; y <= p.years; y++) {
+    var val = 0; put = 0; a2 = p.monthly;
+    for (var k = 0; k < y * 12; k++) {
+      if (k > 0 && k % 12 === 0) a2 = a2 * (1 + p.stepup / 100);
+      put += a2; val += a2 * Math.pow(1 + r, y * 12 - k);
+    }
+    yearly.push({ year: y, put: put, value: val, real: val / Math.pow(1 + p.infl / 100, y) });
+  }
+  var ltTax = Math.max(0, lt - p.exempt) * p.ltcg / 100;
+  var stTax = Math.max(0, st) * p.stcg / 100;
+  var tax = (ltTax + stTax) * (1 + p.cess / 100);
+  var hand = value - tax;
+  var real = hand / Math.pow(1 + p.infl / 100, p.years);
+  return { invested: invested, gross: gross, common: common, value: value, fxEffect: value - valueNoFx, lt: lt, st: st,
+           ltTax: ltTax * (1 + p.cess / 100), stTax: stTax * (1 + p.cess / 100), tax: tax,
+           hand: hand, real: real, yearly: yearly };
+}
+// CALC-END
+
+// Currency changes only the symbol and number style. Nothing is converted.
+var CURRENCIES = {
+  INR: { sym: '₹', sys: 'lakh', name: 'rupee', plural: 'rupees', full: '₹ Rupee' },
+  USD: { sym: '$', sys: 'mil', name: 'dollar', plural: 'dollars', full: '$ US Dollar' },
+  EUR: { sym: '€', sys: 'mil', name: 'euro', plural: 'euros', full: '€ Euro' },
+  GBP: { sym: '£', sys: 'mil', name: 'pound', plural: 'pounds', full: '£ Pound' },
+  JPY: { sym: '¥', sys: 'mil', name: 'yen', plural: 'yen', full: '¥ Yen' }
+};
+// Example tax values for rupees (similar to Indian equity funds when written, Nov 2026). Not presented as current law.
+var INDIA_TAX = { ltcg: 12.5, exempt: 125000, stcg: 20, cess: 4, ltmonths: 12 };
+var OTHER_TAX = { ltcg: 0, exempt: 0, stcg: 0, cess: 0, ltmonths: 12 };
+// Example tax values for shares held abroad (similar to Indian rules when written, Nov 2026): long-term after 24 months at 12.5%, no tax-free amount,
+// short-term at the income tax slab (30% shown as an example).
+var INDIA_FOREIGN_TAX = { ltcg: 12.5, exempt: 0, stcg: 30, cess: 4, ltmonths: 24 };
+var state = { cur: 'INR', sys: 'lakh', cross: false, inv: 'USD', tax: true };
+var TAX_KEYS = ['ltcg', 'exempt', 'stcg', 'cess', 'ltmonths'];
+var taxTouched = false;   // becomes true once the reader changes any tax box; then presets stop overwriting them
+function applyTax() {
+  if (taxTouched) return;
+  if (state.cur === 'INR') setTax(state.cross ? INDIA_FOREIGN_TAX : INDIA_TAX);
+  else setTax(OTHER_TAX);
+}
+
+function sym() { return CURRENCIES[state.cur].sym; }
+function loc() { return state.sys === 'lakh' ? 'en-IN' : 'en-US'; }
+function inr(x) {
+  var s = Math.round(Math.abs(x)).toLocaleString(loc());
+  return (x < -0.5 ? '−' : '') + sym() + s;
+}
+function words(x) {
+  var a = Math.abs(x), sign = x < 0 ? '−' : '';
+  var two = function (v) { return v.toLocaleString(loc(), { maximumFractionDigits: 2, minimumFractionDigits: 2 }); };
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return sign + sym() + two(a / 1e7) + ' crore';
+    if (a >= 1e5) return sign + sym() + two(a / 1e5) + ' lakh';
+  } else {
+    if (a >= 1e9) return sign + sym() + two(a / 1e9) + ' billion';
+    if (a >= 1e6) return sign + sym() + two(a / 1e6) + ' million';
+  }
+  return inr(x);
+}
+function short(x) {
+  var a = Math.abs(x), c = sym().trim();
+  if (a >= 1e15) return c + x.toExponential(1);
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return c + (x / 1e7).toFixed(a >= 1e9 ? 0 : 1) + 'Cr';
+    if (a >= 1e5) return c + (x / 1e5).toFixed(0) + 'L';
+  } else {
+    if (a >= 1e9) return c + (x / 1e9).toFixed(a >= 1e11 ? 0 : 1) + 'B';
+    if (a >= 1e6) return c + (x / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M';
+  }
+  if (a >= 1e3) return c + (x / 1e3).toFixed(0) + 'K';
+  return c + Math.round(x);
+}
+function pct(x) { return (Math.round(x * 100) / 100) + '%'; }
+
+var els = {};
+Object.keys(FIELDS).forEach(function (key) {
+  var f = FIELDS[key];
+  var wrap = document.querySelector('.field[data-key="' + key + '"]');
+  wrap.innerHTML =
+    '<div class="field-top"><label for="n-' + key + '">' + f.label + '</label>' +
+    '<span class="box">' + (f.cur ? '<span class="cur-sym"></span>' : '') +
+    '<input id="n-' + key + '" type="number" inputmode="decimal" step="any">' +
+    (f.suf ? '<span>' + f.suf + '</span>' : '') + '</span></div>' +
+    '<input type="range" id="s-' + key + '" min="' + f.sMin + '" max="' + f.sMax + '" step="' + f.step + '" aria-label="' + f.label + ' slider">' +
+    '<div class="err">' + f.err + '</div>';
+  var num = wrap.querySelector('#n-' + key), sl = wrap.querySelector('#s-' + key);
+  els[key] = { wrap: wrap, num: num, sl: sl };
+  var touch = function () { if (TAX_KEYS.indexOf(key) >= 0) taxTouched = true; };
+  num.addEventListener('input', function () { touch(); if (num.value !== '' && isFinite(+num.value)) sl.value = Math.min(f.sMax, Math.max(f.sMin, +num.value)); update(); });
+  sl.addEventListener('input', function () { touch(); num.value = sl.value; update(); });
+});
+
+function setValue(key, v) {
+  var f = FIELDS[key];
+  els[key].num.value = v;
+  els[key].sl.value = Math.min(f.sMax, Math.max(f.sMin, v));
+}
+function setDefaults() {
+  Object.keys(FIELDS).forEach(function (key) { setValue(key, FIELDS[key].def); });
+}
+function setTax(t) { Object.keys(t).forEach(function (key) { setValue(key, t[key]); }); }
+
+// Refresh every symbol, error message and note that depends on currency or number style.
+function renderLabels() {
+  document.querySelectorAll('.cur-sym').forEach(function (el) { el.textContent = sym().trim(); });
+  els.monthly.wrap.querySelector('.err').textContent = 'Enter a monthly amount between ' + inr(FIELDS.monthly.min) + ' and ' + inr(FIELDS.monthly.max) + '.';
+  els.exempt.wrap.querySelector('.err').textContent = 'Enter an amount between ' + inr(FIELDS.exempt.min) + ' and ' + inr(FIELDS.exempt.max) + '.';
+  var india = state.cur === 'INR';
+  var home = CURRENCIES[state.cur].name, inv = CURRENCIES[state.inv].name;
+  var note = document.getElementById('cur-note');
+  note.textContent = india ? 'Amounts are in rupees. Tax settings start with example values; change them to yours.'
+    : 'Enter every amount in this currency. Nothing is converted. Tax settings are set to zero: add your own country\'s rules under Tax assumptions.';
+  note.className = 'cur-note' + (india ? '' : ' warn');
+  document.getElementById('taxnote').textContent = india
+    ? (state.cross
+        ? 'Example values for shares held abroad: long-term after 24 months at 12.5% with no tax-free amount, short-term at 30%. Tax rules change and depend on your income, so enter the rates that apply to you.'
+        : 'Example values. Tax rules change and depend on your situation, so enter the rates that apply to you.')
+    : 'Set to zero for this currency. Enter the capital gains tax rules where you live.';
+
+  // Investing in another currency
+  document.querySelectorAll('.seg button[data-cross]').forEach(function (b) {
+    var on = (b.dataset.cross === 'yes') === state.cross;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('cross-body').hidden = !state.cross;
+  document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+    var on = (b.dataset.tax === 'on') === state.tax;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('taxgroup').hidden = !state.tax;
+  var invSel = document.getElementById('inv');
+  invSel.innerHTML = Object.keys(CURRENCIES).filter(function (k) { return k !== state.cur; })
+    .map(function (k) { return '<option value="' + k + '">' + CURRENCIES[k].full + '</option>'; }).join('');
+  invSel.value = state.inv;
+  document.getElementById('fx-note').textContent = 'How much the ' + home + ' weakens against the ' + inv + ' each year. A positive number adds to your return in ' + CURRENCIES[state.cur].plural + '; a negative number (the ' + home + ' gets stronger) takes away. 0% assumes no change.';
+  var inflNote = document.getElementById('infl-note');
+  if (!inflNote) {
+    inflNote = document.createElement('p'); inflNote.id = 'infl-note'; inflNote.className = 'field-note';
+    inflNote.textContent = 'The 6% example is a typical Indian figure. Many other countries have seen 2% to 3% a year; enter what fits you.';
+    els.infl.wrap.appendChild(inflNote);
+  }
+  inflNote.style.display = india ? 'none' : 'block';
+  document.getElementById('cur').value = state.cur;
+  document.getElementById('sys').value = state.sys;
+}
+
+function firstOther(cur) { return Object.keys(CURRENCIES).filter(function (k) { return k !== cur; })[0]; }
+document.getElementById('cur').addEventListener('change', function (e) {
+  state.cur = e.target.value;
+  state.sys = CURRENCIES[state.cur].sys;
+  if (state.inv === state.cur) state.inv = state.cur === 'USD' ? 'INR' : firstOther(state.cur);
+  applyTax();
+  if (state.cur !== 'INR') document.querySelector('details.group').open = true;
+  renderLabels(); update();
+});
+document.querySelectorAll('.seg button[data-cross]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var want = b.dataset.cross === 'yes';
+    if (want === state.cross) return;
+    state.cross = want;
+    if (state.cross && state.inv === state.cur) state.inv = state.cur === 'USD' ? 'INR' : firstOther(state.cur);
+    applyTax();
+    renderLabels(); update();
+  });
+});
+document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    state.tax = b.dataset.tax === 'on';
+    renderLabels(); update();
+  });
+});
+document.getElementById('inv').addEventListener('change', function (e) {
+  state.inv = e.target.value;
+  renderLabels(); update();
+});
+document.getElementById('sys').addEventListener('change', function (e) {
+  state.sys = e.target.value;
+  renderLabels(); update();
+});
+
+function read() {
+  var p = {}, ok = true;
+  Object.keys(FIELDS).forEach(function (key) {
+    var f = FIELDS[key], raw = els[key].num.value.trim(), v = +raw;
+    if (key === 'fx' && !state.cross) { els[key].wrap.classList.remove('bad'); p[key] = 0; return; }
+    if (!state.tax && TAX_KEYS.indexOf(key) >= 0) { els[key].wrap.classList.remove('bad'); p[key] = 0; return; }
+    var good = raw !== '' && isFinite(v) && v >= f.min && v <= f.max && (!f.whole || Math.round(v) === v);
+    els[key].wrap.classList.toggle('bad', !good);
+    if (!good) { ok = false; var g = els[key].wrap.closest('details'); if (g) g.open = true; }
+    p[key] = v;
+  });
+  return ok ? p : null;
+}
+
+function update() {
+  var p = read();
+  var results = document.getElementById('results'), chartCard = document.getElementById('chart-card');
+  results.classList.toggle('invalid', !p);
+  chartCard.classList.toggle('invalid', !p);
+  if (!p) return;
+  p.cross = state.cross;
+  var o = project(p);
+  set('o-real', words(o.real));
+  set('o-real-sub', inr(o.real) + ' at today\'s prices, after ' + p.years + (p.years === 1 ? ' year' : ' years'));
+  set('o-in', inr(o.invested) + '<small>' + words(o.invested) + '</small>');
+  set('o-gross', inr(o.gross) + '<small>' + words(o.gross) + '</small>');
+  set('o-common', inr(o.common));
+  set('o-net', inr(o.value) + '<small>' + words(o.value) + '</small>');
+  document.getElementById('row-fx').hidden = !state.cross;
+  if (state.cross) {
+    var fe = o.fxEffect;
+    set('o-fx', (fe > 0.5 ? '+' : '') + inr(fe));
+    set('o-fx-note', p.fx === 0 ? 'No exchange-rate change assumed'
+      : 'The ' + CURRENCIES[state.cur].name + (p.fx > 0 ? ' weakening ' : ' strengthening ') + pct(Math.abs(p.fx)) + ' a year against the ' + CURRENCIES[state.inv].name);
+  }
+  set('o-tax', (o.tax > 0 ? '−' + inr(o.tax) : inr(0)) + '<small>' + (o.tax > 0 ? words(o.tax) : 'no tax') + '</small>');
+  var gain = o.lt + o.st;
+  set('o-tax-split', !state.tax ? 'Tax is switched off' : gain < 0 ? 'You would make a loss of ' + inr(-gain) + ', so no tax' :
+      'Long-term ' + inr(o.ltTax) + ', short-term ' + inr(o.stTax) + (p.cess > 0 ? ', cess included' : ''));
+  set('o-hand', inr(o.hand) + '<small>' + words(o.hand) + '</small>');
+  set('o-real2', inr(o.real) + '<small>' + words(o.real) + '</small>');
+  set('o-infl-note', 'At ' + pct(p.infl) + ' inflation a year');
+
+  var cells = [-2, 0, 2].map(function (d) {
+    var rt = p.ret + d;
+    var out = rt < FIELDS.ret.min || rt > FIELDS.ret.max;
+    var shown = out ? '–' : words(project(Object.assign({}, p, { ret: rt })).real);
+    return '<div class="' + (d === 0 ? 'mid' : '') + '"><div class="r">' + pct(rt) + ' return</div><div class="n">' + shown + '</div></div>';
+  });
+  set('range', cells.join(''));
+
+  drawChart(o.yearly);
+  if (typeof placeResults === 'function') placeResults();
+  set('tbody', o.yearly.map(function (r) {
+    return '<tr><td>' + r.year + '</td><td>' + inr(r.put) + '</td><td>' + inr(r.value) + '</td><td>' + inr(r.real) + '</td></tr>';
+  }).join(''));
+}
+function set(id, html) { document.getElementById(id).innerHTML = html; }
+
+var lastRows = [];
+function drawChart(rows) {
+  lastRows = rows;
+  var svg0 = document.getElementById('chart'); var W = Math.max(300, Math.round(svg0.clientWidth || 600)), H = W < 500 ? 240 : 300, L = 52, R = 10, T = 12, B = 28;
+  svg0.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  var max = 0;
+  rows.forEach(function (r) { max = Math.max(max, r.put, r.value, r.real); });
+  if (max <= 0) max = 1;
+  var mag = Math.pow(10, Math.floor(Math.log10(max)));
+  var nice = [1, 2, 2.5, 5, 10].map(function (k) { return k * mag; }).filter(function (v) { return v >= max; })[0] || max;
+  var x = function (i) { return L + (rows.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (rows.length - 1)); };
+  var y = function (v) { return T + (H - T - B) * (1 - v / nice); };
+  var s = '';
+  for (var g = 0; g <= 4; g++) {
+    var gv = nice * g / 4, gy = y(gv);
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '" stroke="rgba(255,255,255,0.07)"/>';
+    s += '<text x="' + (L - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + short(gv) + '</text>';
+  }
+  var every = Math.max(1, Math.ceil(rows.length / (W < 500 ? 5 : 8)));
+  rows.forEach(function (r, i) {
+    if ((i + 1) % every === 0 || i === 0) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">Y' + r.year + '</text>';
+  });
+  function line(key, color, w) {
+    var d = rows.map(function (r, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(Math.max(0, r[key])).toFixed(1); }).join(' ');
+    var dots = rows.length === 1 ? '<circle cx="' + x(0) + '" cy="' + y(rows[0][key]) + '" r="4" fill="' + color + '"/>' : '';
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + w + '" stroke-linejoin="round" stroke-linecap="round"/>' + dots;
+  }
+  s += line('put', '#6e6e73', 2) + line('value', '#f5f5f7', 2.5) + line('real', '#E50914', 3);
+  s += '<line id="cursor" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3 3" visibility="hidden"/>';
+  s += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" fill="transparent" id="hit"/>';
+  var svg = document.getElementById('chart');
+  svg.innerHTML = s;
+  document.getElementById('tip').textContent = 'Tap or hover on the chart to see a year.';
+  var hit = svg.querySelector('#hit'), cur = svg.querySelector('#cursor');
+  function show(evt) {
+    var pt = evt.touches ? evt.touches[0] : evt;
+    var box = svg.getBoundingClientRect();
+    var sx = (pt.clientX - box.left) * W / box.width;
+    var i = rows.length === 1 ? 0 : Math.round((sx - L) / ((W - L - R) / (rows.length - 1)));
+    i = Math.max(0, Math.min(rows.length - 1, i));
+    var r = rows[i];
+    cur.setAttribute('x1', x(i)); cur.setAttribute('x2', x(i)); cur.setAttribute('visibility', 'visible');
+    document.getElementById('tip').textContent = 'Year ' + r.year + ': put in ' + words(r.put) + ', value ' + words(r.value) + ', today\'s money ' + words(r.real);
+  }
+  hit.addEventListener('mousemove', show);
+  hit.addEventListener('touchstart', show, { passive: true });
+  hit.addEventListener('touchmove', show, { passive: true });
+}
+
+window.calcReset = function () { state.cur = 'INR'; state.sys = 'lakh'; state.cross = false; state.inv = 'USD'; state.tax = true; taxTouched = false; setDefaults(); renderLabels(); update(); };
+setDefaults();
+renderLabels();
+update();
+// Where the results stop while scrolling: just below the nav, so the headline figure always stays in view.
+function placeResults() {
+  var col = document.getElementById('results-col');
+  if (window.innerWidth <= 900) { col.style.top = ''; return; }
+  var nav = document.querySelector('nav');
+  col.style.top = ((nav ? nav.offsetHeight : 0) + 16) + 'px';
+}
+var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (lastRows.length) drawChart(lastRows); placeResults(); }, 150); });
+document.getElementById('taxgroup').addEventListener('toggle', placeResults);
+window.addEventListener('load', placeResults);
+placeResults();
+</script>
+</body>
+</html>

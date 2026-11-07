@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculators · Infinity by Yam</title>
+<link rel="icon" type="image/png" sizes="32x32" href="https://infinitybyyam.github.io/favicon-32.png">
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Calculators/calc-frame.css">
+<style>
+  /* Red grid at the top, same values as the home page and the Learning page */
+  body { position: relative; }
+  body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 620px; background-image: linear-gradient(rgba(229,9,20,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(229,9,20,0.04) 1px, transparent 1px); background-size: 50px 50px; -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%); mask-image: linear-gradient(to bottom, #000 40%, transparent 100%); pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: absolute; top: 4rem; right: 5%; width: min(450px, 80vw); height: 450px; background: radial-gradient(circle, rgba(229,9,20,0.18) 0%, transparent 70%); filter: blur(40px); pointer-events: none; z-index: 0; }
+  footer { position: relative; z-index: 1; }
+
+  .hub-head { margin-bottom: 3rem; }
+  .hub-head h1 { margin-bottom: 0; }
+
+  .group-block { margin-bottom: 3.5rem; }
+
+  /* CARDS */
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 1.5rem; }
+  .calc-card { display: flex; flex-direction: column; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--red); border-radius: 6px; padding: clamp(1.5rem, 4vw, 2rem); box-shadow: 0 10px 30px rgba(0,0,0,.5); color: inherit; text-decoration: none; min-width: 0; transition: border-color .2s, transform .2s, background .2s; }
+  a.calc-card:hover, a.calc-card:focus-visible { border-color: var(--red); background: var(--surface2); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 24px rgba(229,9,20,.18); }
+  .calc-card .eyebrow { margin-bottom: 1rem; }
+  .calc-card .eyebrow.soon { color: var(--faint); background: transparent; border-color: rgba(255,255,255,.15); }
+  .calc-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 1px; line-height: 1.1; color: #fff; margin-bottom: .75rem; }
+  .calc-desc { font-size: .95rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
+  .calc-foot { display: flex; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,.06); padding-top: 1rem; font-size: .8rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--red); transition: color .2s; }
+  a.calc-card:hover .calc-foot, a.calc-card:focus-visible .calc-foot { color: #fff; }
+  .calc-card.is-soon { opacity: .6; box-shadow: none; border-left-color: rgba(229,9,20,.4); }
+  .calc-card.is-soon .calc-foot { color: var(--faint); }
+
+
+  /* COMING SOON */
+  .coming-soon { text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.5); padding: clamp(3rem, 8vw, 5rem) 1.5rem; }
+  .coming-soon { position: relative; overflow: hidden; border-top: 2px solid var(--red); }
+  .coming-soon::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(500px, 90vw); height: 260px; background: radial-gradient(ellipse, rgba(229,9,20,0.14) 0%, transparent 70%); filter: blur(40px); pointer-events: none; }
+  .coming-soon > * { position: relative; }
+  .coming-soon .eyebrow { margin-bottom: 1.25rem; }
+  .coming-soon h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: 1px; color: #fff; }
+
+  .hub-note { font-size: .8rem; color: var(--faint); margin-top: 2rem; text-align: center; }
+</style>
+</head>
+<body>
+<script src="https://infinitybyyam.github.io/Calculators/calc-frame.js"></script>
+
+<main class="page">
+  <div class="glow"></div>
+
+  <header class="hub-head">
+    <div class="section-label">Calculators</div>
+    <h1>Your numbers. <span class="accent">The real picture.</span></h1>
+  </header>
+
+  <section class="group-block">
+    <div class="calc-grid">
+
+      <a class="calc-card" href="https://infinitybyyam.github.io/Calculators/sip_calculator.html">
+        <div>
+          <div class="eyebrow">Live</div>
+          <h3 class="calc-title">SIP Calculator</h3>
+          <p class="calc-desc">Also called a Monthly Investment Plan. Putting in a fixed amount every month? See what it may grow to after fund costs and tax, and what that is worth in today's money.</p>
+        </div>
+        <div class="calc-foot">Open Calculator &rarr;</div>
+      </a>
+
+      <div class="calc-card is-soon" aria-disabled="true">
+        <div>
+          <div class="eyebrow soon">Coming soon</div>
+          <h3 class="calc-title">SWP Calculator</h3>
+          <p class="calc-desc">Taking a fixed amount out every month? See how long the money may last, and what each withdrawal is worth in today's money.</p>
+        </div>
+        <div class="calc-foot">Coming soon</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="coming-soon">
+    <div class="eyebrow">In Progress</div>
+    <h2>More Calculators Coming Soon</h2>
+  </section>
+
+  <p class="hub-note">All results are projections built from your own inputs, not predictions or any investment advice.</p>
+</main>
+
+</body>
+</html>
