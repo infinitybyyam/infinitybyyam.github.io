@@ -563,11 +563,11 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    /* Logo and links stay on one row so the fixed header stays short */
+    /* Header matches the Learning page: logo centred, links centred under it */
     nav {
-      flex-wrap: wrap;
-      gap: 0.4rem 1rem;
-      padding: 0.75rem 5%;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem 5%;
     }
 
     .nav-logo-img { height: 48px; }
@@ -575,7 +575,7 @@
     .nav-links {
       gap: 1.25rem;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      justify-content: center;
       row-gap: 0.3rem;
     }
 
@@ -585,25 +585,38 @@
       letter-spacing: 0.8px;
     }
 
-    /* Hero starts just below the header instead of a fixed large gap */
-    .hero {
-      padding: calc(var(--nav-h) + 3rem) 5% 4rem;
-    }
+    /* One side margin (5%) for every block, so all left edges line up */
+    .learning-section, footer { padding-left: 5%; padding-right: 5%; }
 
-    .contact-section {
-      padding: 4rem 5%;
+    /* Hero: starts just below the header and is only as tall as its content */
+    .hero {
+      min-height: 0;
+      padding: calc(var(--nav-h) + 3rem) 5% 3.5rem;
     }
+    .hero-stack { margin-bottom: 2rem; }
+
+    /* Tighter, even spacing between sections on phones */
+    .learning-section { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+    .contact-section { padding: 3.5rem 5%; }
+
+    /* Text sized like the Learning page cards */
+    .learning-intro { font-size: 0.95rem; line-height: 1.65; }
+    .brand-col .learning-intro { margin-bottom: 1.5rem; }
+    .unified-text { font-size: 0.92rem; line-height: 1.65; }
+    .status-card h3 { margin-bottom: 0.75rem; }
+    .learning-points { gap: 0.85rem; }
+    .learning-points li { gap: 0.9rem; }
+    .learning-points li div { font-size: 0.9rem; line-height: 1.55; }
   }
 
   @media (max-width: 480px) {
-    nav { padding: 0.6rem 5%; gap: 0.3rem 0.75rem; }
-    .nav-logo-img { height: 36px; }
-    .nav-links { gap: 0.9rem; }
-    .nav-links a { font-size: 0.68rem; letter-spacing: 0.6px; }
-
     /* a little more room for text inside the cards on phones */
     .status-card, .sandbox-card { padding: 1.5rem 1.25rem; }
     .sandbox-bars { gap: 0.5rem; }
+
+    /* Hero buttons side by side at equal width */
+    .hero-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .hero-btns a { justify-content: center; padding: 0.9rem 0.75rem; white-space: nowrap; }
   }
 </style>
 </head>
