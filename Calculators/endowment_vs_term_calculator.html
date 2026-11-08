@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endowment vs Term Plan Calculator · Infinity by Yam</title>
+<link rel="icon" type="image/png" sizes="32x32" href="https://infinitybyyam.github.io/favicon-32.png">
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Calculators/calc-frame.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 2rem; align-items: start; }
+
+  /* INPUT EXTRAS */
+  .aka { color: var(--muted); font-size: .95rem; margin: -.4rem 0 1rem; }
+  .part { font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 1px; color: var(--text); margin: 0 0 .2rem; }
+  .part-note { font-size: .78rem; color: var(--faint); margin-bottom: 1.1rem; line-height: 1.5; }
+  .part-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .pick { margin-bottom: 1.1rem; }
+  .pick label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+  .pick select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; padding: .5rem .55rem; font: 600 .9rem 'DM Sans', sans-serif; cursor: pointer; }
+  .pick select:focus { outline: none; border-color: var(--red); }
+  .field-note { font-size: .78rem; color: var(--faint); margin-top: .35rem; line-height: 1.5; }
+  .switch-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .switch-label { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .seg button { background: transparent; color: var(--muted); border: none; padding: .45rem 1rem; font: 600 .8rem 'DM Sans', sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+  .seg button.on { background: var(--red); color: #fff; }
+  .tax-row { border-top: 1px solid var(--line); margin-top: .5rem; padding-top: 1rem; }
+  .tax-row + details.group { border-top: none; margin-top: 0; padding-top: .9rem; }
+  details.group[hidden] { display: none; }
+  details.group + details.group { margin-top: 1rem; }
+  .setup { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1rem; padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .setup label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+  .setup select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; padding: .5rem .55rem; font: 600 .9rem 'DM Sans', sans-serif; cursor: pointer; }
+  .setup select:focus { outline: none; border-color: var(--red); }
+  .cur-note { grid-column: 1 / -1; font-size: .78rem; color: var(--faint); line-height: 1.5; }
+  .cur-note.warn { color: #ff8a90; }
+  .gnote { font-size: .78rem; color: var(--faint); margin: -.4rem 0 1.1rem; line-height: 1.5; }
+  .sub-title { font-size: .72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); margin: .4rem 0 .8rem; }
+
+  /* RESULTS */
+  .verdict { border-left: 3px solid var(--red); padding: .25rem 0 .25rem 1rem; margin: 1rem 0 1.5rem; }
+  .verdict .lbl { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .verdict .big { overflow-wrap: anywhere; font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1; color: var(--red); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .verdict .sub { font-size: .88rem; color: var(--muted); margin-top: .35rem; line-height: 1.5; }
+
+  .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: .75rem; }
+  .duo .c { background: var(--surface2); border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0 .9rem; min-width: 0; }
+  .duo .c.top { border-top: 1px solid var(--line); border-radius: 6px 6px 0 0; padding-top: 1rem; }
+  .duo .c.bot { border-bottom: 1px solid var(--line); border-radius: 0 0 6px 6px; padding-bottom: .8rem; }
+  .duo .c.win { background: #1d1112; border-left-color: rgba(229,9,20,.55); border-right-color: rgba(229,9,20,.55); }
+  .duo .c.top.win { border-top-color: rgba(229,9,20,.55); }
+  .duo .c.bot.win { border-bottom-color: rgba(229,9,20,.55); }
+  .side-h { font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 1px; line-height: 1.1; margin-bottom: .2rem; }
+  .side-tag { font-size: .7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--red); min-height: 1.1em; margin-bottom: .5rem; }
+  .kv { padding-top: .55rem; padding-bottom: .55rem; }
+  .kv > * { display: block; }
+  .duo .kv { position: relative; }
+  .duo .kv::before { content: ''; position: absolute; top: 0; left: .9rem; right: .9rem; border-top: 1px solid var(--line); }
+  .kv .k { font-size: .7rem; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); }
+  .kv .v { font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; letter-spacing: .5px; line-height: 1.1; color: var(--text); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .kv small { font-size: .74rem; color: var(--faint); line-height: 1.4; }
+  .kv.ret .v { color: #fff; font-size: 1.9rem; }
+
+  .block-title { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 1.6rem; }
+  .cells { display: grid; gap: .6rem; margin-top: .6rem; grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .cells > div { background: var(--surface2); border: 1px solid var(--line); border-radius: 4px; padding: .7rem .5rem; text-align: center; min-width: 0; }
+  .cells > div.mid { border-color: rgba(229,9,20,.45); background: rgba(229,9,20,.06); }
+  .cells .r { font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--faint); }
+  .cells .n { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: .5px; line-height: 1.1; overflow-wrap: break-word; }
+  .cells .s { font-size: .72rem; color: var(--faint); line-height: 1.3; }
+  .cap { font-size: .8rem; color: var(--faint); margin-top: .5rem; line-height: 1.5; }
+
+  details.more { margin-top: 1.5rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  details.more summary { cursor: pointer; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .rows { list-style: none; margin-top: 1rem; }
+  .rows.sold { margin-top: 1.1rem; }
+  .rows li.minor .k, .rows li.minor .v { color: var(--faint); font-size: .84rem; }
+  .rows li.minor .v { color: var(--muted); }
+  .rows li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid var(--line); }
+  .rows li:first-child { border-top: 1px solid var(--line); }
+  .rows li[hidden] { display: none; }
+  .rows .k { font-size: .88rem; color: var(--muted); min-width: 0; }
+  .rows .k small { display: block; font-size: .74rem; color: var(--faint); line-height: 1.4; }
+  .rows .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; flex-shrink: 0; max-width: 55%; font-size: .9rem; }
+  .rows .v small { display: block; font-weight: 400; font-size: .74rem; color: var(--faint); }
+  .rows li.warn .k, .rows li.warn .v { color: #ff8a90; }
+
+  .msg { display: none; background: rgba(229,9,20,.08); border: 1px solid rgba(229,9,20,.35); border-radius: 4px; padding: 1rem; color: var(--text); font-size: .92rem; margin-top: 1rem; }
+  .invalid .msg { display: block; }
+  .invalid .needs-valid { display: none; }
+
+  /* CHART */
+  .chart-wide { margin-top: 2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .78rem; color: var(--muted); margin: .5rem 0 .75rem; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: .4rem; border-radius: 2px; }
+  .legend i.ring { width: 10px; height: 10px; border: 2px solid #f5f5f7; border-radius: 50%; background: transparent; }
+  #chart { width: 100%; height: auto; display: block; }
+  #chart text { font-family: 'DM Sans', sans-serif; font-size: 11px; fill: var(--faint); }
+  .tip { font-size: .8rem; color: var(--muted); min-height: 1.3em; margin-top: .4rem; font-variant-numeric: tabular-nums; }
+
+  details.table { margin-top: 1.25rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  details.table summary { cursor: pointer; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .tbl-wrap { overflow-x: auto; margin-top: 1rem; }
+  .yt { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  .yt th, .yt td { padding: .45rem .4rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .yt th:first-child, .yt td:first-child { text-align: left; }
+  .yt th { color: var(--faint); font-weight: 600; font-size: .7rem; letter-spacing: .5px; text-transform: uppercase; }
+
+  @media (min-width: 901px) {
+    #results-col { position: sticky; align-self: start; }
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .duo { column-gap: .5rem; }
+    .duo .c { padding-left: .6rem; padding-right: .6rem; }
+    .duo .kv::before { left: .6rem; right: .6rem; }
+    .side-h { font-size: 1.1rem; }
+    .kv .v { font-size: 1.3rem; }
+    .kv.ret .v { font-size: 1.6rem; }
+    .cells .n { font-size: 1.15rem; }
+    .cells > div { padding: .6rem .3rem; }
+  }
+</style>
+</head>
+<body>
+<script src="https://infinitybyyam.github.io/Calculators/calc-frame.js"></script>
+
+<main class="page">
+  <div class="glow"></div>
+  <div class="section-label">Calculators</div>
+  <h1>Endowment vs Term Plan <span class="accent">Calculator</span></h1>
+  <p class="aka">Also for money-back and guaranteed income plans: life cover and savings sold together as one policy.</p>
+  <p class="intro">Enter the figures from your policy's benefit illustration. See the yearly return the policy really gives, and set it beside the other choice: a term plan for the same life cover, with the rest of the premium invested. Same money out of your pocket each year, same payouts in hand, after tax and in today's money.</p>
+
+  <div class="layout">
+    <!-- INPUTS -->
+    <section class="card" aria-label="Your numbers">
+      <div class="eyebrow">Your numbers</div>
+      <p class="hint">Example values. Replace them with yours. The example is a 30-year-old with ₹1 crore of cover in a 25-year with-profit plan, paying premiums for 16 years.</p>
+
+      <div class="setup">
+        <div>
+          <label for="cur">Your currency</label>
+          <select id="cur">
+            <option value="INR">₹ Rupee</option>
+            <option value="USD">$ US Dollar</option>
+            <option value="EUR">€ Euro</option>
+            <option value="GBP">£ Pound</option>
+            <option value="JPY">¥ Yen</option>
+          </select>
+        </div>
+        <div>
+          <label for="sys">Show numbers in</label>
+          <select id="sys">
+            <option value="lakh">Lakhs</option>
+            <option value="mil">Millions</option>
+          </select>
+        </div>
+        <p class="cur-note" id="cur-note"></p>
+      </div>
+
+      <div class="part-block">
+        <div class="field" data-key="age"></div>
+      </div>
+
+      <div class="part-block">
+        <div class="part">The policy</div>
+        <p class="part-note">From the policy's benefit illustration or brochure.</p>
+        <div class="field" data-key="prem"></div>
+        <div class="field" data-key="ppt"></div>
+        <div class="field" data-key="term"></div>
+        <div class="field" data-key="cover"></div>
+        <div class="field" data-key="mat"></div>
+
+        <details class="group" id="bonusgroup">
+          <summary>Bonus (with-profit plans only)</summary>
+          <p class="gnote">Not guaranteed. Enter the rates you expect, such as the latest declared bonus; leave both at 0 for a guaranteed plan.</p>
+          <div class="field" data-key="brate"></div>
+          <div class="field" data-key="fbonus"></div>
+        </details>
+
+        <details class="group" id="paygroup">
+          <summary>Payouts while the policy runs</summary>
+          <p class="gnote">For money-back and income plans: a fixed amount paid at the end of each year you set. Leave at 0 otherwise.</p>
+          <div class="field" data-key="pay"></div>
+          <div class="field" data-key="pfrom"></div>
+          <div class="field" data-key="pto"></div>
+        </details>
+      </div>
+
+      <div class="part-block">
+        <div class="part">The other choice</div>
+        <p class="part-note">A term plan for the same cover, with the rest of the premium invested in a fund.</p>
+        <div class="field" data-key="tprem"></div>
+        <div class="field" data-key="ret"></div>
+        <div class="field" data-key="exp"></div>
+      </div>
+
+      <div class="field" data-key="infl"></div>
+
+      <div class="switch-row tax-row">
+        <span class="switch-label" id="tax-label">Include tax</span>
+        <div class="seg" role="group" aria-labelledby="tax-label">
+          <button type="button" data-tax="on" class="on" aria-pressed="true">On</button>
+          <button type="button" data-tax="off" aria-pressed="false">Off</button>
+        </div>
+      </div>
+      <details class="group" id="taxgroup">
+        <summary>Tax assumptions</summary>
+        <p class="gnote" id="taxnote"></p>
+        <div class="sub-title">Tax on the policy's maturity</div>
+        <p class="gnote">The maturity is tax-free only while the premium is within both limits. If the rules change, change these.</p>
+        <div class="field" data-key="pcov"></div>
+        <div class="field" data-key="plimit"></div>
+        <div class="field" data-key="slab"></div>
+        <div class="sub-title">Tax on the investment</div>
+        <div class="field" data-key="ltcg"></div>
+        <div class="field" data-key="exempt"></div>
+        <div class="field" data-key="stcg"></div>
+        <div class="field" data-key="ltmonths"></div>
+        <div class="sub-title">Both</div>
+        <div class="field" data-key="cess"></div>
+      </details>
+    </section>
+
+    <!-- RESULTS -->
+    <div id="results-col">
+      <section class="card" id="results" aria-live="polite">
+        <div class="eyebrow">Projection</div>
+        <h2>Which may leave more in your hand</h2>
+        <div class="msg" id="msg">Fix the highlighted input to see the projection.</div>
+
+        <div class="needs-valid">
+          <div class="verdict">
+            <div class="lbl" id="o-lbl"></div>
+            <div class="big" id="o-big">–</div>
+            <div class="sub" id="o-sub"></div>
+          </div>
+
+          <div class="duo">
+            <div class="c p top"><div class="side-h">The policy</div><div class="side-tag" id="tag-p"></div></div>
+            <div class="c a top"><div class="side-h">Term plan + investing</div><div class="side-tag" id="tag-a"></div></div>
+            <div class="c p kv"><span class="k">You pay</span><span class="v" id="p-pay"></span><small id="p-pay-s"></small></div>
+            <div class="c a kv"><span class="k">You pay</span><span class="v" id="a-pay"></span><small id="a-pay-s"></small></div>
+            <div class="c p kv"><span class="k" id="p-hand-k"></span><span class="v" id="p-hand"></span><small id="p-hand-s"></small></div>
+            <div class="c a kv"><span class="k" id="a-hand-k"></span><span class="v" id="a-hand"></span><small id="a-hand-s"></small></div>
+            <div class="c p kv"><span class="k">In today's money</span><span class="v" id="p-real"></span></div>
+            <div class="c a kv"><span class="k">In today's money</span><span class="v" id="a-real"></span><small id="a-real-s"></small></div>
+            <div class="c p kv ret bot"><span class="k">Return a year (IRR)</span><span class="v" id="p-irr"></span><small id="p-irr-s"></small></div>
+            <div class="c a kv ret bot"><span class="k">Return a year (IRR)</span><span class="v" id="a-irr"></span><small>after tax</small></div>
+          </div>
+
+          <ul class="rows sold">
+            <li class="minor"><span class="k">What the policy is usually sold on<small>Money back set against premiums paid. It leaves out how long the money is locked in, inflation and tax, so it looks better than the return a year.</small></span><span class="v" id="o-sold"></span></li>
+          </ul>
+
+          <div class="block-title">If the investment earns more or less</div>
+          <div class="cells" id="range"></div>
+          <p class="cap">Who comes out ahead, and by how much in today's money, if the investment's return is 2 points lower or higher every year. The policy's figures stay the same.</p>
+
+          <details class="more">
+            <summary>The details</summary>
+            <ul class="rows">
+              <li><span class="k">Is the policy's money tax-free?<small id="o-ex-note"></small></span><span class="v" id="o-ex"></span></li>
+              <li id="row-bonus"><span class="k">The policy's return a year<small>After tax. Bonuses are not guaranteed.</small></span><span class="v" id="o-bonus"></span></li>
+              <li id="row-pay"><span class="k">Payouts along the way, in hand<small>The same under both; the other choice sells from the investment to pay them</small></span><span class="v" id="o-pay"></span></li>
+              <li><span class="k">Tax on the policy</span><span class="v" id="o-ptax"></span></li>
+              <li><span class="k">Term plan premiums<small id="o-tprem-note"></small></span><span class="v" id="o-tprem"></span></li>
+              <li><span class="k">Put into the investment</span><span class="v" id="o-buys"></span></li>
+              <li><span class="k">Sold along the way<small>To pay term premiums after the policy's premiums stop, to match payouts, and to pay tax</small></span><span class="v" id="o-sells"></span></li>
+              <li><span class="k">Investment value at the end, before tax</span><span class="v" id="o-vend"></span></li>
+              <li><span class="k">Tax on the investment<small>On all sales, over all the years</small></span><span class="v" id="o-atax"></span></li>
+              <li id="row-extra" class="warn"><span class="k">The investment runs short<small id="o-extra-note"></small></span><span class="v" id="o-extra"></span></li>
+            </ul>
+          </details>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card chart-wide" id="chart-card">
+    <div class="eyebrow">Year by year</div>
+    <h2>How the other choice builds up</h2>
+    <div class="needs-valid">
+      <div class="legend">
+        <span><i style="background:#6e6e73"></i>Paid in so far (the same for both)</span>
+        <span><i style="background:#f5f5f7"></i>Investment value, before tax</span>
+        <span><i style="background:#E50914"></i>Same value in today's money</span>
+        <span><i class="ring"></i>Policy maturity in hand</span>
+      </div>
+      <svg id="chart" viewBox="0 0 600 300" role="img" aria-label="Year by year chart"></svg>
+      <div class="tip" id="tip">Tap or hover on the chart to see a year.</div>
+
+      <details class="table">
+        <summary>Show the year-by-year table</summary>
+        <div class="tbl-wrap">
+          <table class="yt">
+            <thead><tr id="thead"></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="card disclaimer" style="margin-top:2rem">
+    <div class="eyebrow">Please read</div>
+    <p>This is a projection built only from the numbers and assumptions you entered. Real returns, bonuses, inflation and tax rules will be different, and the actual result can be much better or much worse. It is not investment, insurance, tax or financial advice and does not refer to any particular policy, insurer or fund.</p>
+  </section>
+
+  <section class="card how">
+    <div class="eyebrow">How this is calculated</div>
+    <h2>The method, in plain words</h2>
+    <p><strong>The idea.</strong> Both choices take the same money from you every year. In the policy, the premium buys cover and savings together. In the other choice, part of the same premium buys a term plan for the same cover and the rest goes into a fund. Whenever the policy pays you something, the same amount is taken out of the fund, and once premiums stop, the term premium is paid from the fund. So the only difference is what is left at the end. The headline is that difference in today's money.</p>
+    <p><strong>When money moves.</strong> Premiums, the term premium and money into the fund at the start of each year; payouts and the maturity at the end. Each year runs April to March. Real dates differ a little; the effect is small either way.</p>
+    <p><strong>Return a year (IRR).</strong> The one yearly rate that turns what you paid in into what you got back, after tax. This is the internal rate of return (IRR): it allows for premiums being paid over several years and money coming back at the end. It is not a CAGR worked out from total premiums, which treats everything as paid on day one<span id="cagr-note"></span>.</p>
+    <p><strong>What the policy is sold on.</strong> Money back set against premiums paid, as a multiple. It ignores that the money is locked in for years and loses value to inflation, so it always looks better than the return a year.</p>
+    <p><strong>Bonus.</strong> The yearly bonus is your percentage of the cover, added for every year of the term, and paid with the final bonus at maturity. Bonuses are not guaranteed; if they are cut, the policy does worse than shown.</p>
+    <p><strong>The fund.</strong> It grows at your return minus the fund's cost, the same every year, with the cost taken once a year rather than daily. Real returns rise and fall while the policy's guaranteed part does not; the "earns more or less" boxes show how much that matters. If the fund ever cannot pay what it has to, the shortfall counts as extra money from you.</p>
+    <p><strong>Tax.</strong> The policy's maturity and payouts are tax-free while the premium stays within both limits you set; otherwise what you get back above the premiums paid is taxed at your income tax rate when you receive it. The fund's gains are taxed when units are sold, oldest first, at the long-term or short-term rate, with the tax-free amount used once each year. Each year's fund tax is paid at the start of the next by selling units. Losses count only within the same year and are not carried forward, so the fund's tax is, if anything, a little high. No deduction for premiums is given, as under the new tax regime. Surcharge and rebate are left out.</p>
+    <p><strong>Left out, and which way it pushes.</strong> Stopping the policy early usually returns far less than was paid in; the policy is taken as held to maturity, so it looks better here than for anyone who may stop. Death during the term is not compared: both pay the cover, the policy may add bonuses, and the other choice adds whatever is in the fund. A term plan quote that covers more years or a bigger amount than the policy makes the policy look a little better. If you hold other such policies, the yearly premium limit counts them together, so lower it by their premiums.</p>
+    <p><strong>Today's money.</strong> Amounts at the end are divided by inflation over the whole term, so you see what they would buy at today's prices.</p>
+    <p><strong>Currency.</strong> Choosing a currency changes only the symbol and how numbers are written. Nothing is converted, so enter every amount in the currency you choose. For rupees the tax settings start with example values; for other currencies they start at zero, because tax depends on where you live.</p>
+  </section>
+
+  <div data-calc-end></div>
+</main>
+
+
+<script>
+// CALC-START
+var FIELDS = {
+  age:      { label: 'Your age now', suf: 'yrs', def: 30, min: 0, max: 70, sMin: 18, sMax: 60, step: 1, whole: true, err: 'Enter whole years between 0 and 70.' },
+  prem:     { label: 'Yearly premium', cur: true, def: 500000, min: 1, max: 100000000, sMin: 10000, sMax: 1000000, step: 5000, whole: true },
+  ppt:      { label: 'Years you pay the premium', suf: 'yrs', def: 16, min: 1, max: 50, sMin: 1, sMax: 30, step: 1, whole: true, err: 'Enter whole years between 1 and 50.' },
+  term:     { label: 'Policy term', suf: 'yrs', def: 25, min: 1, max: 50, sMin: 5, sMax: 40, step: 1, whole: true, err: 'Enter whole years between 1 and 50.' },
+  cover:    { label: 'Life cover (sum assured)', cur: true, def: 10000000, min: 1, max: 10000000000, sMin: 500000, sMax: 50000000, step: 500000, whole: true },
+  mat:      { label: 'Guaranteed maturity amount', cur: true, def: 10000000, min: 0, max: 10000000000, sMin: 0, sMax: 50000000, step: 500000, whole: true },
+  brate:    { label: 'Yearly bonus', suf: '% of cover', def: 3, min: 0, max: 20, sMin: 0, sMax: 6, step: 0.1, err: 'Enter a bonus between 0% and 20% of the cover.' },
+  fbonus:   { label: 'Final bonus at maturity', cur: true, def: 1000000, min: 0, max: 10000000000, sMin: 0, sMax: 30000000, step: 100000, whole: true },
+  pay:      { label: 'Yearly payout', cur: true, def: 0, min: 0, max: 1000000000, sMin: 0, sMax: 500000, step: 5000, whole: true, pays: true },
+  pfrom:    { label: 'First payout in year', suf: '', def: 17, min: 1, max: 50, sMin: 1, sMax: 40, step: 1, whole: true, err: 'Enter a year between 1 and 50.', pays: true },
+  pto:      { label: 'Last payout in year', suf: '', def: 25, min: 1, max: 50, sMin: 1, sMax: 40, step: 1, whole: true, err: 'Enter a year between 1 and 50.', pays: true },
+  tprem:    { label: 'Term plan yearly premium', cur: true, def: 9500, min: 0, max: 100000000, sMin: 0, sMax: 50000, step: 500, whole: true },
+  ret:      { label: "Investment's yearly return", suf: '%', def: 12, min: -100, max: 100, sMin: 0, sMax: 20, step: 0.5, err: 'Enter a yearly return between -100% and 100%.' },
+  exp:      { label: "Fund's yearly cost", suf: '%', def: 1, min: 0, max: 10, sMin: 0, sMax: 3, step: 0.05, err: 'Enter a yearly cost between 0% and 10%.' },
+  infl:     { label: 'Yearly inflation', suf: '%', def: 6, min: 0, max: 100, sMin: 0, sMax: 12, step: 0.5, err: 'Enter inflation between 0% and 100%.' },
+  pcov:     { label: 'Premium at most', suf: '% of cover', def: 10, min: 0, max: 100, sMin: 0, sMax: 25, step: 1, err: 'Enter a percentage between 0% and 100%.', tax: true },
+  plimit:   { label: 'And premium at most, per year', cur: true, def: 500000, min: 0, max: 100000000, sMin: 0, sMax: 1000000, step: 10000, whole: true, tax: true },
+  slab:     { label: 'If taxed, your income tax rate', suf: '%', def: 30, min: 0, max: 50, sMin: 0, sMax: 40, step: 0.5, err: 'Enter a rate between 0% and 50%.', tax: true },
+  ltcg:     { label: 'Long-term gains tax', suf: '%', def: 12.5, min: 0, max: 50, sMin: 0, sMax: 30, step: 0.5, err: 'Enter a rate between 0% and 50%.', tax: true },
+  exempt:   { label: 'Long-term gains tax-free each year', cur: true, def: 125000, min: 0, max: 1000000, sMin: 0, sMax: 500000, step: 5000, whole: true, tax: true },
+  stcg:     { label: 'Short-term gains tax', suf: '%', def: 20, min: 0, max: 50, sMin: 0, sMax: 40, step: 0.5, err: 'Enter a rate between 0% and 50%.', tax: true },
+  ltmonths: { label: 'Months to count as long-term', suf: 'mo', def: 12, min: 0, max: 60, sMin: 0, sMax: 36, step: 1, whole: true, err: 'Enter whole months between 0 and 60.', tax: true },
+  cess:     { label: 'Cess on tax', suf: '%', def: 4, min: 0, max: 10, sMin: 0, sMax: 10, step: 0.5, err: 'Enter cess between 0% and 10%.', tax: true }
+};
+
+// Timeline in whole years. Year y runs from t = y-1 (start, April) to t = y (end, March): one Indian financial year.
+// Premiums are paid at the start of each year; payouts and maturity arrive at the end.
+
+// Investment tax for one financial year, cess included. Same rule as the SWP calculator.
+function fyTax(p, lt, st) {
+  if (!p.tax) return 0;
+  if (st < 0) { lt += st; st = 0; }
+  lt = Math.max(0, lt);
+  var c = 1 + p.cess / 100;
+  return (Math.max(0, lt - p.exempt) * p.ltcg / 100 + st * p.stcg / 100) * c;
+}
+// Yearly bonus on the cover for every year of the term, plus the final bonus, all paid at maturity. use 'g': guaranteed amounts only.
+function bonusOf(p, use) { return use === 'g' ? 0 : p.cover * p.brate / 100 * p.term + p.fbonus; }
+
+// The policy. In-hand cash flows by time, and totals.
+function plan(p, use) {
+  use = use === undefined ? p.use : use;
+  var N = p.term;
+  var exempt = p.prem <= p.pcov / 100 * p.cover && p.prem <= p.plimit;
+  var taxed = p.tax && !exempt;
+  var rate = p.slab / 100 * (1 + p.cess / 100);
+  var cf = [], payHand = [], y;
+  for (y = 0; y <= N; y++) { cf.push(0); payHand.push(0); }
+  var pool = 0, premTotal = 0, payGross = 0, payTax = 0, matTax = 0;
+  var matGross = p.mat + bonusOf(p, use);
+  for (y = 1; y <= N; y++) {
+    if (y <= p.ppt) { cf[y - 1] -= p.prem; premTotal += p.prem; pool += p.prem; }
+    var rec = [];
+    if (p.pay > 0 && p.pfrom <= y && y <= p.pto) rec.push(['pay', p.pay]);
+    if (y === N) rec.push(['mat', matGross]);
+    for (var j = 0; j < rec.length; j++) {
+      var amt = rec[j][1], t = 0;
+      if (taxed) { var used = Math.min(pool, amt); pool -= used; t = (amt - used) * rate; }
+      if (rec[j][0] === 'pay') { payGross += amt; payTax += t; payHand[y] = amt - t; }
+      else matTax += t;
+      cf[y] += amt - t;
+    }
+  }
+  return { cf: cf, exempt: exempt, premTotal: premTotal, payGross: payGross, payTax: payTax, payHand: payHand,
+           matGross: matGross, matTax: matTax, matHand: matGross - matTax };
+}
+
+// Term plan plus investing. Same money out of pocket each year, same payouts in hand each year.
+function alt(p, pl, ret) {
+  ret = ret === undefined ? p.ret : ret;
+  var N = p.term;
+  var g = Math.max(0, 1 + (ret - p.exp) / 100) - 1;
+  var lots = [];                                   // [value now, cost, time bought]
+  var extra = [], extraY = [], taxPaid = [], i;
+  for (i = 0; i <= N; i++) { extra.push(0); extraY.push(0); taxPaid.push(0); }
+  var buys = 0, sells = 0, taxTotal = 0, rows = [], gains = {};
+  function book(y, t, tb, gain) {
+    if (!gains[y]) gains[y] = [0, 0];
+    if (12 * (t - tb) > p.ltmonths) gains[y][0] += gain; else gains[y][1] += gain;
+  }
+  function sell(x, t, y) {                          // oldest units first; any shortfall is money added from pocket
+    var need = x;
+    while (need > 1e-9 && lots.length) {
+      var v = lots[0][0], c = lots[0][1], tb = lots[0][2];
+      if (v <= need + 1e-9) { book(y, t, tb, v - c); lots.shift(); need -= v; sells += v; }
+      else { var cost = c * need / v; book(y, t, tb, need - cost); lots[0] = [v - need, c - cost, tb]; sells += need; need = 0; }
+    }
+    if (need > 1e-9) { extra[t] += need; extraY[y] += need; }
+  }
+  var due = 0, altEnd = 0;
+  for (var y = 1; y <= N; y++) {
+    var t0 = y - 1;
+    if (!gains[y]) gains[y] = [0, 0];
+    if (due > 0) { sell(due, t0, y); taxPaid[y] += due; taxTotal += due; }
+    due = 0;
+    var flow = (y <= p.ppt ? p.prem : 0) - p.tprem;
+    if (flow > 0) { lots.push([flow, flow, t0]); buys += flow; }
+    else if (flow < 0) sell(-flow, t0, y);
+    for (i = 0; i < lots.length; i++) lots[i][0] *= (1 + g);
+    if (pl.payHand[y] > 0) sell(pl.payHand[y], y, y);
+    var value = 0;
+    for (i = 0; i < lots.length; i++) value += lots[i][0];
+    rows.push({ year: y, value: value, valueReal: value / Math.pow(1 + p.infl / 100, y) });
+    if (y === N) {
+      var proceeds = value;
+      while (lots.length) { var L = lots.shift(); book(y, y, L[2], L[0] - L[1]); }
+      var tLast = fyTax(p, gains[y][0], gains[y][1]);
+      taxPaid[y] += tLast; taxTotal += tLast;
+      altEnd = proceeds - tLast;
+    } else due = fyTax(p, gains[y][0], gains[y][1]);
+  }
+  return { extra: extra, extraY: extraY, buys: buys, sells: sells, taxTotal: taxTotal, taxPaid: taxPaid,
+           valueEnd: rows[rows.length - 1].value, altEnd: altEnd, rows: rows };
+}
+
+function irr(cf) {
+  function npv(r) { var s = 0; for (var t = 0; t < cf.length; t++) s += cf[t] / Math.pow(1 + r, t); return s; }
+  var lo = -0.9999, hi = 10, flo = npv(lo), fhi = npv(hi);
+  if (!((flo < 0 && 0 < fhi) || (fhi < 0 && 0 < flo))) return null;
+  for (var k = 0; k < 200; k++) {
+    var mid = (lo + hi) / 2, fm = npv(mid);
+    if ((fm < 0) === (flo < 0)) { lo = mid; flo = fm; } else hi = mid;
+  }
+  return (lo + hi) / 2 * 100;
+}
+
+// o: { ret, use } optional overrides
+function compare(p, o) {
+  o = o || {};
+  var pl = plan(p, o.use), a = alt(p, pl, o.ret);
+  var i = p.infl / 100, N = p.term;
+  var defl = function (t) { return Math.pow(1 + i, t); };
+  var extraReal = 0;
+  for (var t = 0; t < a.extra.length; t++) extraReal += a.extra[t] / defl(t);
+  var planReal = pl.matHand / defl(N), altReal = a.altEnd / defl(N);
+  var adv = altReal - extraReal - planReal;        // positive: term plan plus investing comes out ahead
+  var acf = pl.cf.slice();
+  acf[N] += a.altEnd - pl.matHand;
+  for (t = 0; t < a.extra.length; t++) acf[t] -= a.extra[t];
+  return { pl: pl, a: a, adv: adv, extraReal: extraReal, planReal: planReal, altReal: altReal,
+           planIrr: irr(pl.cf), altIrr: irr(acf) };
+}
+
+// Return before costs at which term plus investing exactly matches the policy, in today's money.
+function breakEven(p) {
+  var f = function (r) { return compare(p, { ret: r }).adv; };
+  var lo = -100, hi = 100;
+  if (f(lo) >= 0) return 'below';
+  if (f(hi) < 0) return 'above';
+  for (var k = 0; k < 200; k++) {
+    var mid = (lo + hi) / 2;
+    if (f(mid) < 0) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+// CALC-END
+
+var TAX_KEYS = Object.keys(FIELDS).filter(function (k) { return FIELDS[k].tax; });
+// Currency changes only the symbol and number style. Nothing is converted.
+var CURRENCIES = {
+  INR: { sym: '₹', sys: 'lakh' }, USD: { sym: '$', sys: 'mil' }, EUR: { sym: '€', sys: 'mil' },
+  GBP: { sym: '£', sys: 'mil' }, JPY: { sym: '¥', sys: 'mil' }
+};
+// Example tax values for rupees (similar to Indian rules when checked, Nov 2026). Not presented as current law.
+var INDIA_TAX = { pcov: 10, plimit: 500000, slab: 30, ltcg: 12.5, exempt: 125000, stcg: 20, cess: 4, ltmonths: 12 };
+var OTHER_TAX = { pcov: 0, plimit: 0, slab: 0, ltcg: 0, exempt: 0, stcg: 0, cess: 0, ltmonths: 12 };
+var state = { tax: true, cur: 'INR', sys: 'lakh' };
+var taxTouched = false;   // once the reader changes a tax box, changing currency stops overwriting them
+
+function sym() { return CURRENCIES[state.cur].sym; }
+function loc() { return state.sys === 'lakh' ? 'en-IN' : 'en-US'; }
+function inr(x) {
+  var s = Math.round(Math.abs(x)).toLocaleString(loc());
+  return (x < -0.5 ? '−' : '') + sym() + s;
+}
+function words(x) {
+  var a = Math.abs(x), sign = x < 0 ? '−' : '';
+  var two = function (v) { return v.toLocaleString(loc(), { maximumFractionDigits: 2, minimumFractionDigits: 2 }); };
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return sign + sym() + two(a / 1e7) + ' crore';
+    if (a >= 1e5) return sign + sym() + two(a / 1e5) + ' lakh';
+  } else {
+    if (a >= 1e9) return sign + sym() + two(a / 1e9) + ' billion';
+    if (a >= 1e6) return sign + sym() + two(a / 1e6) + ' million';
+  }
+  return inr(x);
+}
+function short(x) {
+  var a = Math.abs(x), c = sym();
+  if (a >= 1e15) return c + x.toExponential(1);
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return c + (x / 1e7).toFixed(a >= 1e9 ? 0 : 1) + 'Cr';
+    if (a >= 1e5) return c + (x / 1e5).toFixed(0) + 'L';
+  } else {
+    if (a >= 1e9) return c + (x / 1e9).toFixed(a >= 1e11 ? 0 : 1) + 'B';
+    if (a >= 1e6) return c + (x / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M';
+  }
+  if (a >= 1e3) return c + (x / 1e3).toFixed(0) + 'K';
+  return c + Math.round(x);
+}
+function pct(x) { return (Math.round(x * 100) / 100).toLocaleString(loc()) + '%'; }
+function irrText(v) { return v === null ? '–' : pct(v); }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+function money(x) { return inr(x) + (words(x) !== inr(x) ? '<small>' + words(x) + '</small>' : ''); }
+
+var els = {};
+Object.keys(FIELDS).forEach(function (key) {
+  var f = FIELDS[key];
+  var wrap = document.querySelector('.field[data-key="' + key + '"]');
+  wrap.innerHTML =
+    '<div class="field-top"><label for="n-' + key + '">' + f.label + '</label>' +
+    '<span class="box">' + (f.cur ? '<span class="cur-sym"></span>' : '') +
+    '<input id="n-' + key + '" type="number" inputmode="decimal" step="any">' +
+    (f.suf ? '<span>' + f.suf + '</span>' : '') + '</span></div>' +
+    '<input type="range" id="s-' + key + '" min="' + f.sMin + '" max="' + f.sMax + '" step="' + f.step + '" aria-label="' + f.label + ' slider">' +
+    '<div class="err"></div>';
+  var num = wrap.querySelector('#n-' + key), sl = wrap.querySelector('#s-' + key);
+  els[key] = { wrap: wrap, num: num, sl: sl, err: wrap.querySelector('.err') };
+  num.addEventListener('input', function () { if (f.tax) taxTouched = true; if (num.value !== '' && isFinite(+num.value)) sl.value = Math.min(f.sMax, Math.max(f.sMin, +num.value)); update(); });
+  sl.addEventListener('input', function () { if (f.tax) taxTouched = true; num.value = sl.value; update(); });
+});
+function note(key, text) {
+  var n = document.createElement('p'); n.className = 'field-note'; n.textContent = text;
+  els[key].wrap.appendChild(n);
+}
+note('age', 'Only used to show ages. Premiums come from your own quotes.');
+var pptNote = document.createElement('p'); pptNote.className = 'field-note'; els.ppt.wrap.appendChild(pptNote);
+var termNote = document.createElement('p'); termNote.className = 'field-note'; els.term.wrap.appendChild(termNote);
+note('mat', 'The guaranteed part only. Bonuses go below.');
+note('tprem', 'From a quote for the same cover. It pays only on death, so it costs far less.');
+note('ret', 'Before the fund\'s yearly cost. Not guaranteed.');
+note('plimit', 'All such policies together; take off the premiums of any others you hold.');
+var brateNote = document.createElement('p'); brateNote.className = 'field-note'; els.brate.wrap.appendChild(brateNote);
+note('slab', 'Used only if the maturity is taxed.');
+
+function setValue(key, v) {
+  var f = FIELDS[key];
+  els[key].num.value = v;
+  els[key].sl.value = Math.min(f.sMax, Math.max(f.sMin, v));
+}
+function setDefaults() { Object.keys(FIELDS).forEach(function (key) { setValue(key, FIELDS[key].def); }); }
+
+function setTax(t) { Object.keys(t).forEach(function (key) { setValue(key, t[key]); }); }
+function applyTax() { if (!taxTouched) setTax(state.cur === 'INR' ? INDIA_TAX : OTHER_TAX); }
+function renderLabels() {
+  document.querySelectorAll('.cur-sym').forEach(function (e) { e.textContent = sym(); });
+  var india = state.cur === 'INR';
+  var cn = document.getElementById('cur-note');
+  cn.textContent = india ? 'Amounts are in rupees. Tax settings start with example values; change them to yours.'
+    : 'Enter every amount in this currency. Nothing is converted. Tax settings are set to zero: add your own country\'s rules under Tax assumptions.';
+  cn.className = 'cur-note' + (india ? '' : ' warn');
+  var tn = document.getElementById('taxnote');
+  tn.textContent = india ? '' : 'Set to zero for this currency. Enter the tax rules where you live.';
+  tn.hidden = india;
+  document.getElementById('cur').value = state.cur;
+  document.getElementById('sys').value = state.sys;
+  document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+    var on = (b.dataset.tax === 'on') === state.tax;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('taxgroup').hidden = !state.tax;
+}
+document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+  b.addEventListener('click', function () { state.tax = b.dataset.tax === 'on'; renderLabels(); update(); });
+});
+document.getElementById('cur').addEventListener('change', function (e) {
+  state.cur = e.target.value; state.sys = CURRENCIES[state.cur].sys;
+  applyTax();
+  if (state.cur !== 'INR') document.getElementById('taxgroup').open = true;
+  renderLabels(); update();
+});
+document.getElementById('sys').addEventListener('change', function (e) { state.sys = e.target.value; renderLabels(); update(); });
+
+function read() {
+  var p = {}, ok = true, payOn = +els.pay.num.value > 0;
+  function mark(key, good, msg) {
+    els[key].wrap.classList.toggle('bad', !good);
+    var f = FIELDS[key];
+    els[key].err.textContent = msg || f.err || ('Enter an amount between ' + inr(f.min) + ' and ' + inr(f.max) + '.');
+    if (!good) { ok = false; var g = els[key].wrap.closest('details'); if (g) g.open = true; }
+  }
+  Object.keys(FIELDS).forEach(function (key) {
+    var f = FIELDS[key], raw = els[key].num.value.trim(), v = +raw;
+    if ((!state.tax && f.tax) || (f.pays && key !== 'pay' && !payOn)) { mark(key, true); p[key] = key === 'pfrom' || key === 'pto' ? 1 : 0; return; }
+    var good = raw !== '' && isFinite(v) && v >= f.min && v <= f.max && (!f.whole || Math.round(v) === v);
+    mark(key, good);
+    p[key] = v;
+  });
+  if (!ok) return null;
+  if (p.age + p.term > 100) mark('term', false, 'The policy would end after age 100 (you are ' + p.age + ').');
+  if (p.ppt > p.term) mark('ppt', false, 'This cannot be more than the policy term (' + plural(p.term, 'year', 'years') + ').');
+  if (p.pay > 0) {
+    if (p.pto > p.term) mark('pto', false, 'This cannot be after the policy term ends (year ' + p.term + ').');
+    else if (p.pfrom > p.pto) mark('pfrom', false, 'This cannot be after the last payout year.');
+  }
+  p.tax = state.tax; p.use = 'b';
+  return ok ? p : null;
+}
+
+function update() {
+  var bc = +els.cover.num.value, br = +els.brate.num.value, bt = +els.term.num.value;
+  brateNote.textContent = bc > 0 && br >= 0 && bt >= 1 && isFinite(bc * br * bt)
+    ? inr(bc * br / 100) + ' a year, ' + words(bc * br / 100 * bt) + ' over ' + plural(bt, 'year', 'years') + ', paid at maturity.'
+    : 'A share of the cover added each year, paid at maturity.';
+  var p = read();
+  var ag = +els.age.num.value, pp = +els.ppt.num.value, tm = +els.term.num.value;
+  var agesOk = els.age.num.value !== '' && isFinite(ag);
+  pptNote.textContent = agesOk && pp >= 1 ? 'You pay until age ' + (ag + pp) + '.' : 'If you pay every year, enter the policy term.';
+  termNote.textContent = agesOk && tm >= 1 ? 'Maturity is paid at age ' + (ag + tm) + '.' : 'When the maturity is paid.';
+  var results = document.getElementById('results'), chartCard = document.getElementById('chart-card');
+  results.classList.toggle('invalid', !p);
+  chartCard.classList.toggle('invalid', !p);
+  if (!p) return;
+  var c = compare(p), pl = c.pl, a = c.a, N = p.term, endAge = p.age + N;
+  var extraTot = a.extra.reduce(function (s, v) { return s + v; }, 0);
+  var adv = Math.round(c.adv);
+  var be = breakEven(p);
+
+  // Verdict
+  if (adv >= 1) { set('o-lbl', 'Term plan + investing leaves more, by'); set('o-big', words(c.adv)); }
+  else if (adv <= -1) { set('o-lbl', 'The policy leaves more, by'); set('o-big', words(-c.adv)); }
+  else { set('o-lbl', 'Under your numbers'); set('o-big', 'Level'); }
+  var beText = typeof be === 'number'
+    ? 'The investment needs ' + pct(be) + ' a year (before the fund\'s cost) to match the policy.'
+    : be === 'below' ? 'Term plan + investing comes out level or ahead even at −100% a year.' : 'The investment cannot catch up even at 100% a year.';
+  set('o-sub', (Math.abs(adv) >= 1 ? 'In today\'s money, at age ' + endAge + '. ' : 'Both end with the same money at age ' + endAge + '. ') + beText);
+
+  // Two sides
+  var win = adv >= 1 ? 'a' : adv <= -1 ? 'p' : '';
+  document.querySelectorAll('.duo .c.p').forEach(function (e) { e.classList.toggle('win', win === 'p'); });
+  document.querySelectorAll('.duo .c.a').forEach(function (e) { e.classList.toggle('win', win === 'a'); });
+  set('tag-p', win === 'p' ? 'More in hand' : '');
+  set('tag-a', win === 'a' ? 'More in hand' : '');
+  var payHandTot = pl.payGross - pl.payTax;
+
+  set('p-pay', words(pl.premTotal));
+  set('p-pay-s', inr(p.prem) + ' a year for ' + plural(p.ppt, 'year', 'years'));
+  set('p-hand-k', 'In hand at age ' + endAge);
+  set('p-hand', words(pl.matHand));
+  set('p-hand-s', (pl.matGross - p.mat >= 0.5 ? 'with ' + words(pl.matGross - p.mat) + ' bonus' : 'guaranteed amount') +
+      (pl.matTax >= 0.5 ? ', after ' + words(pl.matTax) + ' tax' : ', tax-free') +
+      (payHandTot >= 0.5 ? '; plus ' + words(payHandTot) + ' in payouts along the way' : ''));
+  set('p-real', words(c.planReal));
+  set('p-irr', irrText(c.planIrr));
+  set('p-irr-s', 'after tax' + (pl.matGross - p.mat >= 0.5 && p.mat > 0 ? '; ' + irrText(compare(p, { use: 'g' }).planIrr) + ' on the guaranteed part' : ''));
+
+  set('a-pay', words(pl.premTotal + extraTot));
+  set('a-pay-s', extraTot >= 0.5 ? 'the same, plus ' + words(extraTot) + ' added when the investment ran short'
+      : 'the same; ' + inr(p.tprem) + ' a year buys the cover, the rest is invested');
+  set('a-hand-k', 'In hand at age ' + endAge);
+  set('a-hand', words(a.altEnd));
+  set('a-hand-s', a.taxTotal >= 0.5 ? 'after ' + words(a.taxTotal) + ' tax' : 'no tax');
+  set('a-real', words(c.altReal));
+  set('a-real-s', extraTot >= 0.5 ? 'before taking off the ' + words(c.extraReal) + ' added, in today\'s money' : '');
+  set('a-irr', irrText(c.altIrr));
+
+  // Method text: the policy's IRR against a CAGR worked out as if every premium were paid on day one, with the reader's numbers
+  var gotBack = pl.matHand + payHandTot, cagr = pl.premTotal > 0 && gotBack > 0 ? (Math.pow(gotBack / pl.premTotal, 1 / N) - 1) * 100 : null;
+  set('cagr-note', c.planIrr === null || cagr === null ? ''
+    : cagr < c.planIrr ? ' and so shows a lower figure (' + pct(cagr) + ' instead of ' + pct(c.planIrr) + ' with your numbers)'
+    : ' (with your numbers: ' + pct(cagr) + ' that way, against an IRR of ' + pct(c.planIrr) + ')');
+
+  // What it is sold on
+  var back = pl.matGross + pl.payGross;
+  set('o-sold', words(back) + ' back on ' + words(pl.premTotal) + '<small>' + (Math.round(back / pl.premTotal * 100) / 100).toLocaleString(loc(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' times your money</small>');
+
+  // Range
+  set('range', [-2, 0, 2].map(function (d) {
+    var rt = p.ret + d, out = rt < FIELDS.ret.min || rt > FIELDS.ret.max, n, s;
+    if (out) { n = '–'; s = 'outside the allowed range'; }
+    else {
+      var v = d === 0 ? c.adv : compare(p, { ret: rt }).adv, r = Math.round(v);
+      n = r === 0 ? 'Level' : words(Math.abs(v));
+      s = r > 0 ? 'term plan + investing ahead' : r < 0 ? 'the policy ahead' : 'the same';
+    }
+    return '<div class="' + (d === 0 ? 'mid' : '') + '"><div class="r">' + (out ? '' : pct(rt)) + ' return</div><div class="n">' + n + '</div><div class="s">' + s + '</div></div>';
+  }).join(''));
+
+  // Details
+  if (!p.tax) { set('o-ex', 'Not counted'); set('o-ex-note', 'Tax is switched off'); }
+  else if (pl.exempt) { set('o-ex', 'Yes'); set('o-ex-note', 'The premium is ' + pct(p.prem / p.cover * 100) + ' of the cover and within the yearly limit'); }
+  else {
+    set('o-ex', 'No');
+    set('o-ex-note', p.prem > p.pcov / 100 * p.cover
+      ? 'The premium is ' + pct(p.prem / p.cover * 100) + ' of the cover, above ' + pct(p.pcov)
+      : 'The premium is above the yearly limit of ' + inr(p.plimit));
+    set('o-ex-note', document.getElementById('o-ex-note').innerHTML + '; taxed at ' + pct(p.slab) + ' plus cess');
+  }
+  var hasBonus = pl.matGross - p.mat >= 0.5;
+  document.getElementById('row-bonus').hidden = !hasBonus;
+  if (hasBonus) set('o-bonus', 'With bonus ' + irrText(c.planIrr) + '<small>Guaranteed only: ' + irrText(compare(p, { use: 'g' }).planIrr) + '</small>');
+  document.getElementById('row-pay').hidden = pl.payGross < 0.5;
+  set('o-pay', inr(payHandTot));
+  var pTax = pl.payTax + pl.matTax;
+  set('o-ptax', pTax >= 0.5 ? '−' + inr(pTax) : inr(0));
+  set('o-tprem', inr(p.tprem * N));
+  set('o-tprem-note', inr(p.tprem) + ' a year for ' + plural(N, 'year', 'years'));
+  set('o-buys', inr(a.buys));
+  set('o-sells', inr(a.sells));
+  set('o-vend', inr(a.valueEnd));
+  set('o-atax', a.taxTotal >= 0.5 ? '−' + inr(a.taxTotal) : inr(0));
+  document.getElementById('row-extra').hidden = extraTot < 0.5;
+  set('o-extra', inr(extraTot) + '<small>' + inr(c.extraReal) + ' in today\'s money</small>');
+  var firstShort = a.extraY.findIndex(function (v) { return v >= 0.5; });
+  set('o-extra-note', 'From year ' + firstShort + ' (age ' + (p.age + firstShort) + ') it cannot cover what it has to pay. The shortfall counts as money you would have added, and is taken off its side.');
+
+  // Chart and table
+  var paid = 0, series = [{ year: 0, paid: 0, value: 0, valueReal: 0 }];
+  a.rows.forEach(function (r) {
+    paid += r.year <= p.ppt ? p.prem : 0;
+    series.push({ year: r.year, paid: paid, value: r.value, valueReal: r.valueReal });
+  });
+  lastAge = p.age;
+  drawChart(series, pl.matHand);
+  var anyExtra = extraTot >= 0.5;
+  set('thead', '<th>Year (age)</th><th>You pay</th><th>Term premium</th><th>Into the investment</th><th>Payout in hand</th><th>Tax paid</th>' +
+      (anyExtra ? '<th>Added</th>' : '') + '<th>Value at year end</th><th>Today\'s money</th>');
+  set('tbody', a.rows.map(function (r) {
+    var y = r.year, you = y <= p.ppt ? p.prem : 0, into = you - p.tprem;
+    return '<tr><td>' + y + ' (' + (p.age + y) + ')</td><td>' + inr(you) + '</td><td>' + inr(p.tprem) + '</td><td>' + inr(into) +
+           '</td><td>' + inr(pl.payHand[y]) + '</td><td>' + inr(a.taxPaid[y]) + '</td>' +
+           (anyExtra ? '<td>' + inr(a.extraY[y]) + '</td>' : '') +
+           '<td>' + inr(r.value) + '</td><td>' + inr(r.valueReal) + '</td></tr>';
+  }).join(''));
+  placeResults();
+}
+function set(id, html) { document.getElementById(id).innerHTML = html; }
+
+var lastRows = [], lastMat = 0, lastAge = 0;
+function drawChart(rows, mat) {
+  lastRows = rows; lastMat = mat;
+  var svg = document.getElementById('chart');
+  var W = Math.max(300, Math.round(svg.clientWidth || 600)), H = W < 500 ? 240 : 300, L = 52, R = 14, T = 12, B = 28;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  var max = Math.max(mat, 0);
+  rows.forEach(function (r) { max = Math.max(max, r.value, r.valueReal, r.paid); });
+  if (max <= 0) max = 1;
+  var mag = Math.pow(10, Math.floor(Math.log10(max)));
+  var nice = [1, 2, 2.5, 5, 10].map(function (k) { return k * mag; }).filter(function (v) { return v >= max; })[0] || max;
+  var x = function (i) { return L + i * (W - L - R) / (rows.length - 1); };
+  var y = function (v) { return T + (H - T - B) * (1 - v / nice); };
+  var s = '';
+  for (var g = 0; g <= 4; g++) {
+    var gv = nice * g / 4, gy = y(gv);
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '" stroke="rgba(255,255,255,0.07)"/>';
+    s += '<text x="' + (L - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + short(gv) + '</text>';
+  }
+  var every = Math.max(1, Math.ceil(rows.length / (W < 500 ? 5 : 8)));
+  rows.forEach(function (r, i) {
+    if (i % every === 0) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">Y' + r.year + '</text>';
+  });
+  function line(key, color, w) {
+    var d = rows.map(function (r, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(Math.max(0, r[key])).toFixed(1); }).join(' ');
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + w + '" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  s += line('paid', '#6e6e73', 2) + line('value', '#f5f5f7', 2.5) + line('valueReal', '#E50914', 3);
+  s += '<circle cx="' + x(rows.length - 1).toFixed(1) + '" cy="' + y(Math.max(0, mat)).toFixed(1) + '" r="5" fill="#121212" stroke="#f5f5f7" stroke-width="2"/>';
+  s += '<line id="cursor" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3 3" visibility="hidden"/>';
+  s += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" fill="transparent" id="hit"/>';
+  svg.innerHTML = s;
+  document.getElementById('tip').textContent = 'Tap or hover on the chart to see a year.';
+  var hit = svg.querySelector('#hit'), cur = svg.querySelector('#cursor');
+  function show(evt) {
+    var pt = evt.touches ? evt.touches[0] : evt;
+    var box = svg.getBoundingClientRect();
+    var sx = (pt.clientX - box.left) * W / box.width;
+    var i = Math.max(0, Math.min(rows.length - 1, Math.round((sx - L) / ((W - L - R) / (rows.length - 1)))));
+    var r = rows[i];
+    cur.setAttribute('x1', x(i)); cur.setAttribute('x2', x(i)); cur.setAttribute('visibility', 'visible');
+    document.getElementById('tip').textContent = (r.year === 0 ? 'Start' : 'Year ' + r.year) + ' (age ' + (lastAge + r.year) + '): paid in ' + words(r.paid) +
+      ', investment ' + words(r.value) + ' (' + words(r.valueReal) + ' in today\'s money)' +
+      (i === rows.length - 1 ? '; policy maturity in hand ' + words(mat) : '');
+  }
+  hit.addEventListener('mousemove', show);
+  hit.addEventListener('touchstart', show, { passive: true });
+  hit.addEventListener('touchmove', show, { passive: true });
+}
+
+function placeResults() {
+  var col = document.getElementById('results-col');
+  if (window.innerWidth <= 900) { col.style.top = ''; return; }
+  var nav = document.querySelector('nav');
+  col.style.top = ((nav ? nav.offsetHeight : 0) + 16) + 'px';
+}
+
+window.calcReset = function () {
+  state.tax = true; state.cur = 'INR'; state.sys = 'lakh'; taxTouched = false;
+  setDefaults(); renderLabels(); update();
+};
+setDefaults();
+renderLabels();
+update();
+var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (lastRows.length) drawChart(lastRows, lastMat); placeResults(); }, 150); });
+document.querySelectorAll('details').forEach(function (d) { d.addEventListener('toggle', placeResults); });
+window.addEventListener('load', placeResults);
+</script>
+</body>
+</html>
