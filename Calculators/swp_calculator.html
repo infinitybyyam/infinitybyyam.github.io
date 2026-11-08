@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWP Calculator · Infinity by Yam</title>
+<link rel="icon" type="image/png" sizes="32x32" href="https://infinitybyyam.github.io/favicon-32.png">
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Calculators/calc-frame.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 2rem; align-items: start; }
+
+  /* INPUT EXTRAS */
+  .aka { color: var(--muted); font-size: .95rem; margin: -.4rem 0 1rem; }
+  .setup { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1rem; padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .setup label, .pick label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+  .setup select, .pick select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; padding: .5rem .55rem; font: 600 .9rem 'DM Sans', sans-serif; cursor: pointer; }
+  .setup select:focus, .pick select:focus { outline: none; border-color: var(--red); }
+  .pick { margin-bottom: 1.1rem; }
+  .pick[hidden] { display: none; }
+  .pick .sub { font-size: .75rem; color: var(--faint); margin-top: .3rem; line-height: 1.45; }
+  .cur-note { grid-column: 1 / -1; font-size: .78rem; color: var(--faint); line-height: 1.5; }
+  .cur-note.warn { color: #ff8a90; }
+  .field-note { font-size: .78rem; color: var(--faint); margin-top: .35rem; line-height: 1.5; }
+  .field-note.warn { color: #ff8a90; }
+  .switch-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .switch-label { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .seg button { background: transparent; color: var(--muted); border: none; padding: .45rem 1rem; font: 600 .8rem 'DM Sans', sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+  .seg button.on { background: var(--red); color: #fff; }
+  .tax-row { border-top: 1px solid var(--line); margin-top: .5rem; padding-top: 1rem; }
+  .tax-row + details.group { border-top: none; margin-top: 0; padding-top: .9rem; }
+  details.group[hidden] { display: none; }
+  .fresh-row { flex-wrap: wrap; gap: .6rem 1rem; margin-bottom: .4rem; }
+  #oldmoney { margin-top: 1rem; }
+  #oldmoney[hidden] { display: none; }
+  .fresh-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .gnote { font-size: .78rem; color: var(--faint); margin: -.4rem 0 1.1rem; line-height: 1.5; }
+
+  /* RESULTS */
+  .headline { border-left: 3px solid var(--red); padding: .25rem 0 .25rem 1rem; margin: 1rem 0 1.5rem; }
+  .headline .lbl { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .headline .big { overflow-wrap: anywhere; font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1; color: var(--red); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .headline .sub { font-size: .85rem; color: var(--muted); margin-top: .2rem; }
+  .rows { list-style: none; }
+  .rows li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+  .rows li:first-child { border-top: 1px solid var(--line); }
+  .rows li[hidden] { display: none; }
+  .rows .k { font-size: .9rem; color: var(--muted); min-width: 0; }
+  .rows .k small { display: block; font-size: .75rem; color: var(--faint); line-height: 1.4; }
+  .rows .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; flex-shrink: 0; max-width: 60%; }
+  .rows .v small { display: block; font-weight: 400; font-size: .75rem; color: var(--faint); }
+  .rows li.minor .k, .rows li.minor .v { color: var(--faint); font-size: .82rem; }
+  .rows li.strong .k { color: var(--text); }
+  .rows li.strong .v { color: #fff; }
+  .rows li.gap { border-top: 1px solid var(--line); margin-top: 1rem; }
+
+  .block-title { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 1.6rem; }
+  .cells { display: grid; gap: .6rem; margin-top: .6rem; }
+  .cells.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .cells > div { background: var(--surface2); border: 1px solid var(--line); border-radius: 4px; padding: .7rem .6rem; text-align: center; min-width: 0; }
+  .cells > div.mid { border-color: rgba(229,9,20,.45); background: rgba(229,9,20,.06); }
+  .cells .r { font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--faint); }
+  .cells .n { font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; letter-spacing: .5px; line-height: 1.1; overflow-wrap: break-word; }
+  .cells .s { font-size: .72rem; color: var(--faint); line-height: 1.3; }
+  .cap { font-size: .8rem; color: var(--faint); margin-top: .5rem; line-height: 1.5; }
+
+  .msg { display: none; background: rgba(229,9,20,.08); border: 1px solid rgba(229,9,20,.35); border-radius: 4px; padding: 1rem; color: var(--text); font-size: .92rem; margin-top: 1rem; }
+  .invalid .msg { display: block; }
+  .invalid .needs-valid { display: none; }
+
+  /* CHART: full width below the inputs and results */
+  .chart-wide { margin-top: 2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .78rem; color: var(--muted); margin: .5rem 0 .75rem; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: .4rem; border-radius: 2px; }
+  #chart { width: 100%; height: auto; display: block; }
+  #chart text { font-family: 'DM Sans', sans-serif; font-size: 11px; fill: var(--faint); }
+  .tip { font-size: .8rem; color: var(--muted); min-height: 1.3em; margin-top: .4rem; font-variant-numeric: tabular-nums; }
+
+  details.table { margin-top: 1.25rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  details.table summary { cursor: pointer; font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .tbl-wrap { overflow-x: auto; margin-top: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: .45rem .4rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--faint); font-weight: 600; font-size: .7rem; letter-spacing: .5px; text-transform: uppercase; }
+
+  @media (min-width: 901px) {
+    #results-col { position: sticky; align-self: start; }
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .cells .n { font-size: 1.2rem; }
+    .cells > div { padding: .6rem .35rem; }
+  }
+</style>
+</head>
+<body>
+<script src="https://infinitybyyam.github.io/Calculators/calc-frame.js"></script>
+
+<main class="page">
+  <div class="glow"></div>
+  <div class="section-label">Calculators</div>
+  <h1>SWP <span class="accent">Calculator</span></h1>
+  <p class="aka">Systematic Withdrawal Plan: a fixed amount taken out of an investment every month.</p>
+  <p class="intro">Enter the money you start with, what you take out each month, and your own assumptions. See how long it may last, what exit load and tax take out of each withdrawal, what reaches your hand, and what that is worth in today's money.</p>
+
+  <div class="layout">
+    <!-- INPUTS -->
+    <section class="card" aria-label="Your numbers">
+      <div class="eyebrow">Your numbers</div>
+      <p class="hint">Example values. Replace them with yours.</p>
+
+      <div class="setup">
+        <div>
+          <label for="cur">Your currency</label>
+          <select id="cur">
+            <option value="INR">₹ Rupee</option>
+            <option value="USD">$ US Dollar</option>
+            <option value="EUR">€ Euro</option>
+            <option value="GBP">£ Pound</option>
+            <option value="JPY">¥ Yen</option>
+          </select>
+        </div>
+        <div>
+          <label for="sys">Show numbers in</label>
+          <select id="sys">
+            <option value="lakh">Lakhs</option>
+            <option value="mil">Millions</option>
+          </select>
+        </div>
+        <p class="cur-note" id="cur-note"></p>
+      </div>
+
+      <div class="field" data-key="corpus"></div>
+      <div class="fresh-block">
+        <div class="switch-row fresh-row">
+          <span class="switch-label" id="fresh-label">Is this money fresh?</span>
+          <div class="seg" role="group" aria-labelledby="fresh-label">
+            <button type="button" data-fresh="yes" class="on" aria-pressed="true">Fresh</button>
+            <button type="button" data-fresh="no" aria-pressed="false">Already invested</button>
+          </div>
+        </div>
+        <p class="field-note">Fresh: a lump sum you are investing now, such as a retirement payout. Already invested: money that has been growing for a while, such as a SIP you now start drawing from. It changes the tax, and the exit load if you set one.</p>
+        <div id="oldmoney" hidden>
+          <div class="field" data-key="orig"></div>
+          <div class="field" data-key="yrs"></div>
+        </div>
+      </div>
+      <div class="field" data-key="monthly"></div>
+      <div class="field" data-key="stepup"></div>
+      <div class="field" data-key="years"></div>
+      <div class="field" data-key="ret"></div>
+      <div class="field" data-key="exp"></div>
+      <div class="field" data-key="infl"></div>
+
+      <details class="group">
+        <summary>Exit load</summary>
+        <p class="gnote">Many funds charge none. Some charge a small percentage on units sold within a set time after buying. Check your fund's terms.</p>
+        <div class="field" data-key="load"></div>
+        <div class="field" data-key="loadmo"></div>
+      </details>
+
+      <div class="switch-row tax-row">
+        <span class="switch-label" id="tax-label">Include tax</span>
+        <div class="seg" role="group" aria-labelledby="tax-label">
+          <button type="button" data-tax="on" class="on" aria-pressed="true">On</button>
+          <button type="button" data-tax="off" aria-pressed="false">Off</button>
+        </div>
+      </div>
+      <details class="group" id="taxgroup">
+        <summary>Tax assumptions</summary>
+        <p class="gnote" id="taxnote"></p>
+        <div class="field" data-key="ltcg"></div>
+        <div class="field" data-key="exempt"></div>
+        <div class="field" data-key="stcg"></div>
+        <div class="field" data-key="cess"></div>
+        <div class="field" data-key="ltmonths"></div>
+      </details>
+    </section>
+
+    <!-- RESULTS -->
+    <div id="results-col">
+      <section class="card" id="results" aria-live="polite">
+        <div class="eyebrow">Projection</div>
+        <h2>How long it may last</h2>
+        <div class="msg" id="msg">Fix the highlighted input to see the projection.</div>
+
+        <div class="needs-valid">
+          <div class="headline">
+            <div class="lbl" id="o-lbl"></div>
+            <div class="big" id="o-big">–</div>
+            <div class="sub" id="o-sub"></div>
+          </div>
+
+          <ul class="rows">
+            <li><span class="k">Money you start with<small id="o-rate"></small></span><span class="v" id="o-start"></span></li>
+            <li><span class="k">Total taken out<small>All withdrawals added up</small></span><span class="v" id="o-out"></span></li>
+            <li><span class="k">Exit load</span><span class="v" id="o-load"></span></li>
+            <li><span class="k">Tax on withdrawals<small id="o-tax-split"></small></span><span class="v" id="o-tax"></span></li>
+            <li class="strong"><span class="k">What reaches your hand</span><span class="v" id="o-hand"></span></li>
+            <li class="strong"><span class="k">Same, in today's money<small id="o-infl-note"></small></span><span class="v" id="o-hand-real"></span></li>
+            <li id="row-last"><span class="k">Your last full withdrawal<small id="o-last-note"></small></span><span class="v" id="o-last"></span></li>
+            <li id="row-left"><span class="k">Value left at the end<small>Before tax</small></span><span class="v" id="o-left"></span></li>
+            <li id="row-left-real"><span class="k">Left if you sell it all at the end, in today's money<small id="o-sale-note"></small></span><span class="v" id="o-left-real"></span></li>
+            <li><span class="k" id="o-max-k">Largest monthly withdrawal that lasts the full period<small id="o-max-note"></small></span><span class="v" id="o-max"></span></li>
+            <li class="minor"><span class="k">What the common shortcut shows<small>It divides the yearly return by 12 and leaves out fund costs, so it gives more than the return you entered. It also usually ignores tax and inflation.</small></span><span class="v" id="o-common"></span></li>
+          </ul>
+
+          <div class="block-title">If the return is different</div>
+          <div class="cells three" id="range"></div>
+          <p class="cap">The yearly return 2 points lower or higher than you entered, every year. "Full" means the money lasts your whole plan; the amount left is after tax, in today's money.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card chart-wide" id="chart-card">
+    <div class="eyebrow">Year by year</div>
+    <h2>How it runs down</h2>
+    <div class="needs-valid">
+      <div class="legend">
+        <span><i style="background:#f5f5f7"></i>Value left in the fund</span>
+        <span><i style="background:#E50914"></i>Same value in today's money</span>
+        <span><i style="background:#6e6e73"></i>Received in hand so far, in today's money</span>
+      </div>
+      <svg id="chart" viewBox="0 0 600 300" role="img" aria-label="Year by year chart"></svg>
+      <div class="tip" id="tip">Tap or hover on the chart to see a year.</div>
+
+      <details class="table">
+        <summary>Show the year-by-year table</summary>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Year</th><th>Taken out</th><th>Exit load</th><th>Tax paid</th><th>In hand</th><th>Value left</th><th>Today's money</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="card disclaimer" style="margin-top:2rem">
+    <div class="eyebrow">Please read</div>
+    <p>This is a projection built only from the numbers and assumptions you entered. Real returns, inflation and tax rules will be different, and the actual result can be much better or much worse. It is not investment, tax or financial advice and does not refer to any particular fund.</p>
+  </section>
+
+  <section class="card how">
+    <div class="eyebrow">How this is calculated</div>
+    <h2>The method, in plain words</h2>
+    <p><strong>When money moves.</strong> The money goes in at the start of a month. The first withdrawal is taken at the end of that month, and one more at the end of every month after that. If you start withdrawing straight away, the money lasts slightly less than shown. The plan is taken to start in <span class="yr-start">April</span>, so each year of the plan is one tax year (<span class="yr-span">April to March</span>). For rupees this follows the Indian financial year; for other currencies the tax year is taken as the calendar year. Starting in another month moves some withdrawals into a different tax year, which changes the tax a little.</p>
+    <p><strong>How it grows.</strong> The fund's yearly cost is taken off the yearly return, and what is left is turned into a true monthly rate, so twelve months of growth add up exactly to that yearly figure. The money still invested keeps growing while you withdraw.</p>
+    <p><strong>The same return every year.</strong> Real returns jump around, and when you are withdrawing, the order matters: a fall early on, while most of the money is still invested, does far more damage than the same fall later. A steady return can make the money look like it lasts longer than a bumpy path with the same average. The "If the return is different" result shows how much the answer moves when the return is 2 points lower or higher every year.</p>
+    <p><strong>Raising the withdrawal.</strong> The monthly amount goes up by your percentage at the start of each new year of the plan. At 0% it stays the same, and it buys less every year; the "last full withdrawal" line shows what it is worth by then.</p>
+    <p><strong>Running out.</strong> If what is left is less than the next withdrawal, whatever is left is taken as a last part withdrawal and the plan stops. "Lasts" counts the full withdrawals.</p>
+    <p><strong>Exit load.</strong> Charged on a withdrawal if the money has been held for no more than the months you set. It comes out of what you receive. Some funds let part of the holding go out free of load each year, so exit load shown here may be high.</p>
+    <p><strong>Tax.</strong> Each withdrawal is treated as selling units. Its gain is what you receive minus what those units cost. If the money has been held for more than the long-term period, the gain is long-term; otherwise short-term. Gains are added up for each tax year (<span class="yr-span">April to March</span>), which here is each year of the plan. A short-term loss in a year is set off against long-term gain in the same year; a long-term loss is not set off against short-term gain. Losses are not carried to later years, so if losses happen, tax shown is, if anything, a little high. Long-term gain above the tax-free amount is taxed at the long-term rate, short-term gain at the short-term rate, and cess is added on top. The tax-free amount is used once in every tax year. Surcharge is not included, so tax shown is low for very high incomes. The basic exemption limit and any rebate are not applied, so for someone with little other income the real tax can be lower than shown, even zero. If you choose "Already invested", the profit in it is the money you start with minus what you originally put in, and its age is the years you enter. It is treated as one lot with one average cost and one age; real holdings bought at different times are sold oldest first, which usually means more tax early and less later than shown. Tax rules change, so always enter the rates that apply to you.</p>
+    <p><strong>Who pays the tax.</strong> Each year's tax is paid at the end of the tax year out of the money you received. If you sell extra units to pay it instead, the money runs out sooner than shown.</p>
+    <p><strong>Today's money.</strong> Each amount you receive, and each tax payment, is divided by inflation compounded up to the month it happens. It tells you what that money would buy at today's prices.</p>
+    <p><strong>Money left at the end.</strong> If the money lasts the full period, the value left is shown, and also what you would keep if you sold it all at the end of the last month, after exit load and tax in that final tax year.</p>
+    <p><strong>Largest monthly withdrawal.</strong> The highest starting amount, raised each year by your percentage, that leaves nothing at the end of the period without running out early. Exit load and tax do not change it, because they are paid from what you receive, not from the fund.</p>
+    <p><strong>Currency.</strong> Choosing a currency changes only the symbol and how numbers are written. Nothing is converted, so enter every amount in the currency you choose. For rupees the tax settings start with example values; for other currencies they start at zero, because tax depends on where you live.</p>
+  </section>
+
+  <div data-calc-end></div>
+</main>
+
+
+<script>
+// CALC-START
+var FIELDS = {
+  corpus:   { label: 'Money you start with', cur: true, suf: '', def: 5000000, min: 1, max: 10000000000, sMin: 100000, sMax: 50000000, step: 50000, whole: true, err: '' },
+  monthly:  { label: 'Monthly withdrawal', cur: true, suf: '', def: 30000, min: 0, max: 100000000, sMin: 0, sMax: 300000, step: 1000, whole: true, err: '' },
+  stepup:   { label: 'Raise it each year by', suf: '%', def: 6, min: 0, max: 50, sMin: 0, sMax: 15, step: 0.5, err: 'Enter a yearly rise between 0% and 50%.' },
+  years:    { label: 'Years to plan for', suf: 'yrs', def: 30, min: 1, max: 60, sMin: 1, sMax: 50, step: 1, whole: true, err: 'Enter whole years between 1 and 60.' },
+  ret:      { label: 'Yearly return on money still invested', suf: '%', def: 12, min: -100, max: 100, sMin: 0, sMax: 20, step: 0.5, err: 'Enter a yearly return between -100% and 100%.' },
+  exp:      { label: "Fund's yearly cost", suf: '%', def: 1, min: 0, max: 10, sMin: 0, sMax: 3, step: 0.05, err: 'Enter a yearly cost between 0% and 10%.' },
+  infl:     { label: 'Yearly inflation', suf: '%', def: 6, min: 0, max: 100, sMin: 0, sMax: 12, step: 0.5, err: 'Enter inflation between 0% and 100%.' },
+  orig:     { label: 'Originally put in', cur: true, suf: '', def: 3000000, min: 1, max: 10000000000, sMin: 100000, sMax: 50000000, step: 50000, whole: true, err: '', old: true },
+  yrs:      { label: 'Invested for', suf: 'yrs', def: 5, min: 0, max: 50, sMin: 0, sMax: 30, step: 1, whole: true, err: 'Enter whole years between 0 and 50.', old: true },
+  load:     { label: 'Exit load', suf: '%', def: 0, min: 0, max: 10, sMin: 0, sMax: 3, step: 0.25, err: 'Enter an exit load between 0% and 10%.' },
+  loadmo:   { label: 'Charged within (months held)', suf: 'mo', def: 12, min: 0, max: 60, sMin: 0, sMax: 36, step: 1, whole: true, err: 'Enter whole months between 0 and 60.' },
+  ltcg:     { label: 'Long-term gains tax', suf: '%', def: 12.5, min: 0, max: 50, sMin: 0, sMax: 30, step: 0.5, err: 'Enter a rate between 0% and 50%.' },
+  exempt:   { label: 'Long-term gains tax-free each year', cur: true, suf: '', def: 125000, min: 0, max: 1000000, sMin: 0, sMax: 500000, step: 5000, whole: true, err: '' },
+  stcg:     { label: 'Short-term gains tax', suf: '%', def: 20, min: 0, max: 50, sMin: 0, sMax: 40, step: 0.5, err: 'Enter a rate between 0% and 50%.' },
+  cess:     { label: 'Cess on tax', suf: '%', def: 4, min: 0, max: 10, sMin: 0, sMax: 10, step: 0.5, err: 'Enter cess between 0% and 10%.' },
+  ltmonths: { label: 'Months to count as long-term', suf: 'mo', def: 12, min: 0, max: 60, sMin: 0, sMax: 36, step: 1, whole: true, err: 'Enter whole months between 0 and 60.' }
+};
+
+function monthlyRate(ret, exp) { return Math.pow(Math.max(0, 1 + (ret - exp) / 100), 1 / 12) - 1; }
+// The plan starts when the tax year starts (April for rupees, January otherwise), so each plan year is one tax year.
+function fyOf(k) { return Math.floor((k - 1) / 12); }
+// Tax for one financial year, cess included. Losses are set off inside the year only.
+function fyTax(p, lt, st) {
+  if (!p.tax) return [0, 0, 0];
+  if (st < 0) { lt += st; st = 0; }       // short-term loss set off against long-term gain
+  lt = Math.max(0, lt);                   // long-term loss is not set off against short-term gain
+  var ltTaxable = Math.max(0, lt - p.exempt);
+  var c = 1 + p.cess / 100;
+  var a = ltTaxable * p.ltcg / 100 * c, b = st * p.stcg / 100 * c;
+  return [a + b, a, b];
+}
+
+// p: corpus, monthly, stepup, years, ret, exp, infl, gain0, held0, load, loadmo, tax (bool), ltcg, exempt, stcg, cess, ltmonths
+// o: { ret, shortcut } optional overrides
+function project(p, o) {
+  o = o || {};
+  var ret = o.ret === undefined ? p.ret : o.ret;
+  var H = p.years * 12, inf = p.infl / 100;
+  var defl = function (k) { return Math.pow(1 + inf, k / 12); };
+  var rNorm = o.shortcut ? ret / 1200 : monthlyRate(ret, p.exp);
+  var nav = 1, units = p.corpus;
+  var cpu = (p.corpus - p.gain0) / p.corpus;
+  var fy = new Map();
+  var withdrawn = 0, loadTot = 0, handNom = 0, handReal = 0;
+  var full = 0, partial = 0, ranOut = false, lastFull = 0, lastFullK = 0;
+  var rows = [], yw = 0, yl = 0, yhr = 0, k;
+  for (k = 1; k <= H; k++) {
+    nav *= (1 + rNorm);
+    var V = units * nav;
+    var W = p.monthly * Math.pow(1 + p.stepup / 100, Math.floor((k - 1) / 12));
+    var amt;
+    if (V >= W - 1e-9) { amt = W; full++; lastFull = W; lastFullK = k; }
+    else { amt = V; partial = V; ranOut = true; }
+    var held = p.held0 + k;
+    var ld = held <= p.loadmo ? amt * p.load / 100 : 0;
+    var u = nav > 0 ? amt / nav : 0;
+    var gain = amt - ld - cpu * u;
+    units -= u;
+    if (units < 1e-12) units = 0;
+    var f = fyOf(k);
+    if (!fy.has(f)) fy.set(f, [0, 0, k]);
+    var b = fy.get(f);
+    if (held > p.ltmonths) b[0] += gain; else b[1] += gain;
+    b[2] = k;
+    withdrawn += amt; loadTot += ld;
+    handNom += amt - ld; handReal += (amt - ld) / defl(k);
+    yw += amt; yl += ld; yhr += (amt - ld) / defl(k);
+    if (k % 12 === 0 || ranOut) {
+      rows.push({ year: Math.ceil(k / 12), k: k, withdrawn: yw, load: yl, recvReal: yhr,
+                  value: units * nav, valueReal: units * nav / Math.pow(1 + inf, k / 12) });
+      yw = 0; yl = 0; yhr = 0;
+    }
+    if (ranOut) break;
+  }
+  // Tax by financial year, paid at the last plan month of that year
+  var tax = 0, tLt = 0, tSt = 0, taxReal = 0, taxAt = [];
+  fy.forEach(function (v) {
+    var t = fyTax(p, v[0], v[1]);
+    tax += t[0]; tLt += t[1]; tSt += t[2];
+    taxReal += t[0] / defl(v[2]);
+    taxAt.push([v[2], t[0]]);
+  });
+  var cum = 0;
+  rows.forEach(function (row) {
+    var lo = (row.year - 1) * 12 + 1, t = 0, tr = 0;
+    taxAt.forEach(function (x) { if (x[0] >= lo && x[0] <= row.k) { t += x[1]; tr += x[1] / defl(x[0]); } });
+    row.tax = t; row.hand = row.withdrawn - row.load - t;
+    cum += row.recvReal - tr; row.cumHandReal = cum;
+  });
+  handNom -= tax; handReal -= taxReal;
+  // Value left, and the extra exit load and tax if all of it is sold at the end of the last month
+  var vEnd = ranOut ? 0 : units * nav, saleLoad = 0, saleTax = 0;
+  if (vEnd > 0) {
+    var heldEnd = p.held0 + H;
+    saleLoad = heldEnd <= p.loadmo ? vEnd * p.load / 100 : 0;
+    var g = vEnd - saleLoad - cpu * units;
+    var last = fy.get(fyOf(H)), lt2 = last[0], st2 = last[1];
+    if (heldEnd > p.ltmonths) lt2 += g; else st2 += g;
+    saleTax = fyTax(p, lt2, st2)[0] - fyTax(p, last[0], last[1])[0];
+  }
+  var leftAfter = vEnd - saleLoad - saleTax;
+  return { full: full, partial: partial, ranOut: ranOut, withdrawn: withdrawn, load: loadTot,
+           tax: tax, taxLt: tLt, taxSt: tSt, hand: handNom, handReal: handReal,
+           lastFull: lastFull, lastFullReal: lastFullK ? lastFull / defl(lastFullK) : 0,
+           valueEnd: vEnd, saleLoad: saleLoad, saleTax: saleTax, leftAfter: leftAfter,
+           leftAfterReal: leftAfter / Math.pow(1 + inf, p.years), rows: rows };
+}
+
+// Largest first-month withdrawal (with the step-up) that lasts every month. The end value is a straight line in it.
+function maxMonthly(p) {
+  var r = monthlyRate(p.ret, p.exp), H = p.years * 12;
+  function endValue(c, w) {
+    var v = c;
+    for (var k = 1; k <= H; k++) v = v * (1 + r) - w * Math.pow(1 + p.stepup / 100, Math.floor((k - 1) / 12));
+    return v;
+  }
+  var v0 = endValue(p.corpus, 0), v1 = endValue(p.corpus, 1);
+  if (v0 <= 0) return 0;
+  return v0 / (v0 - v1);
+}
+// CALC-END
+
+// Currency changes only the symbol and number style. Nothing is converted.
+var CURRENCIES = {
+  INR: { sym: '₹', sys: 'lakh' }, USD: { sym: '$', sys: 'mil' }, EUR: { sym: '€', sys: 'mil' },
+  GBP: { sym: '£', sys: 'mil' }, JPY: { sym: '¥', sys: 'mil' }
+};
+// Example tax values for rupees (similar to Indian rules for equity funds when written, Nov 2026). Not presented as current law.
+var INDIA_TAX = { ltcg: 12.5, exempt: 125000, stcg: 20, cess: 4, ltmonths: 12 };
+var OTHER_TAX = { ltcg: 0, exempt: 0, stcg: 0, cess: 0, ltmonths: 12 };
+var TAX_KEYS = ['ltcg', 'exempt', 'stcg', 'cess', 'ltmonths'];
+var state = { cur: 'INR', sys: 'lakh', tax: true, fresh: true };
+var taxTouched = false;   // once the reader types in a tax box, currency changes stop overwriting them
+function applyTax() {
+  if (taxTouched) return;
+  setTax(state.cur === 'INR' ? INDIA_TAX : OTHER_TAX);
+}
+
+function sym() { return CURRENCIES[state.cur].sym; }
+function loc() { return state.sys === 'lakh' ? 'en-IN' : 'en-US'; }
+function inr(x) {
+  var s = Math.round(Math.abs(x)).toLocaleString(loc());
+  return (x < -0.5 ? '−' : '') + sym() + s;
+}
+function words(x) {
+  var a = Math.abs(x), sign = x < 0 ? '−' : '';
+  var two = function (v) { return v.toLocaleString(loc(), { maximumFractionDigits: 2, minimumFractionDigits: 2 }); };
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return sign + sym() + two(a / 1e7) + ' crore';
+    if (a >= 1e5) return sign + sym() + two(a / 1e5) + ' lakh';
+  } else {
+    if (a >= 1e9) return sign + sym() + two(a / 1e9) + ' billion';
+    if (a >= 1e6) return sign + sym() + two(a / 1e6) + ' million';
+  }
+  return inr(x);
+}
+function short(x) {
+  var a = Math.abs(x), c = sym();
+  if (a >= 1e15) return c + x.toExponential(1);
+  if (state.sys === 'lakh') {
+    if (a >= 1e7) return c + (x / 1e7).toFixed(a >= 1e9 ? 0 : 1) + 'Cr';
+    if (a >= 1e5) return c + (x / 1e5).toFixed(0) + 'L';
+  } else {
+    if (a >= 1e9) return c + (x / 1e9).toFixed(a >= 1e11 ? 0 : 1) + 'B';
+    if (a >= 1e6) return c + (x / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M';
+  }
+  if (a >= 1e3) return c + (x / 1e3).toFixed(0) + 'K';
+  return c + Math.round(x);
+}
+function pct(x) { return (Math.round(x * 100) / 100) + '%'; }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+function duration(full) {
+  var y = Math.floor(full / 12), m = full % 12;
+  if (full === 0) return 'Under a month';
+  if (m === 0) return plural(y, 'year', 'years');
+  if (y === 0) return plural(m, 'month', 'months');
+  return plural(y, 'year', 'years') + ' ' + plural(m, 'month', 'months');
+}
+function shortDur(full) {
+  var y = Math.floor(full / 12), m = full % 12;
+  return full === 0 ? 'Under 1 month' : y + 'y ' + m + 'm';
+}
+
+var els = {};
+Object.keys(FIELDS).forEach(function (key) {
+  var f = FIELDS[key];
+  var wrap = document.querySelector('.field[data-key="' + key + '"]');
+  wrap.innerHTML =
+    '<div class="field-top"><label for="n-' + key + '">' + f.label + '</label>' +
+    '<span class="box">' + (f.cur ? '<span class="cur-sym"></span>' : '') +
+    '<input id="n-' + key + '" type="number" inputmode="decimal" step="any">' +
+    (f.suf ? '<span>' + f.suf + '</span>' : '') + '</span></div>' +
+    '<input type="range" id="s-' + key + '" min="' + f.sMin + '" max="' + f.sMax + '" step="' + f.step + '" aria-label="' + f.label + ' slider">' +
+    '<div class="err">' + f.err + '</div>';
+  var num = wrap.querySelector('#n-' + key), sl = wrap.querySelector('#s-' + key);
+  els[key] = { wrap: wrap, num: num, sl: sl };
+  var touch = function () { if (TAX_KEYS.indexOf(key) >= 0) taxTouched = true; };
+  num.addEventListener('input', function () { touch(); if (num.value !== '' && isFinite(+num.value)) sl.value = Math.min(f.sMax, Math.max(f.sMin, +num.value)); update(); });
+  sl.addEventListener('input', function () { touch(); num.value = sl.value; update(); });
+});
+var stepNote = document.createElement('p'); stepNote.className = 'field-note';
+stepNote.textContent = 'Set it equal to inflation to keep the buying power of each withdrawal. 0% keeps the same amount every month, which buys less each year.';
+els.stepup.wrap.appendChild(stepNote);
+var retNote = document.createElement('p'); retNote.className = 'field-note';
+retNote.textContent = 'Before the fund\'s yearly cost, which you enter next. The money you have already taken out earns nothing.';
+els.ret.wrap.appendChild(retNote);
+var gainNote = document.createElement('p'); gainNote.className = 'field-note';
+els.orig.wrap.appendChild(gainNote);
+var yrsNote = document.createElement('p'); yrsNote.className = 'field-note';
+yrsNote.textContent = 'Years since you first invested it. Under a year? Enter 0.';
+els.yrs.wrap.appendChild(yrsNote);
+var inflNote = document.createElement('p'); inflNote.className = 'field-note warn';
+inflNote.textContent = 'The 6% example is a typical Indian figure. Many other countries have seen 2% to 3% a year; enter what fits you.';
+els.infl.wrap.appendChild(inflNote);
+
+function setValue(key, v) {
+  var f = FIELDS[key];
+  els[key].num.value = v;
+  els[key].sl.value = Math.min(f.sMax, Math.max(f.sMin, v));
+}
+function setDefaults() { Object.keys(FIELDS).forEach(function (key) { setValue(key, FIELDS[key].def); }); }
+function setTax(t) { Object.keys(t).forEach(function (key) { setValue(key, t[key]); }); }
+
+function renderLabels() {
+  document.querySelectorAll('.cur-sym').forEach(function (el) { el.textContent = sym(); });
+  var range = function (key) { return inr(FIELDS[key].min) + ' and ' + inr(FIELDS[key].max); };
+  els.corpus.wrap.querySelector('.err').textContent = 'Enter an amount between ' + range('corpus') + '.';
+  els.monthly.wrap.querySelector('.err').textContent = 'Enter an amount between ' + range('monthly') + '.';
+  els.orig.wrap.querySelector('.err').textContent = 'Enter an amount between ' + range('orig') + '.';
+  els.exempt.wrap.querySelector('.err').textContent = 'Enter an amount between ' + range('exempt') + '.';
+  var india = state.cur === 'INR';
+  var note = document.getElementById('cur-note');
+  note.textContent = india ? 'Amounts are in rupees. Tax settings start with example values; change them to yours.'
+    : 'Enter every amount in this currency. Nothing is converted. Tax settings are set to zero: add your own country\'s rules under Tax assumptions.';
+  note.className = 'cur-note' + (india ? '' : ' warn');
+  document.getElementById('taxnote').textContent = !india
+    ? 'Set to zero for this currency. Enter the capital gains tax rules where you live.'
+    : 'Example values, similar to Indian rules for equity funds when this was written (November 2026). Tax rules change and depend on your situation, so enter the rates that apply to you.';
+  document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+    var on = (b.dataset.tax === 'on') === state.tax;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('taxgroup').hidden = !state.tax;
+  document.querySelectorAll('.seg button[data-fresh]').forEach(function (b) {
+    var on = (b.dataset.fresh === 'yes') === state.fresh;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('oldmoney').hidden = state.fresh;
+  inflNote.style.display = india ? 'none' : 'block';
+  // Rupees: plan starts in April (Indian financial year). Other currencies: January (calendar year). Wording only; the sums are the same.
+  document.querySelectorAll('.yr-start').forEach(function (el) { el.textContent = india ? 'April' : 'January'; });
+  document.querySelectorAll('.yr-span').forEach(function (el) { el.textContent = india ? 'April to March' : 'January to December'; });
+  document.getElementById('cur').value = state.cur;
+  document.getElementById('sys').value = state.sys;
+}
+
+document.getElementById('cur').addEventListener('change', function (e) {
+  state.cur = e.target.value;
+  state.sys = CURRENCIES[state.cur].sys;
+  applyTax();
+  if (state.cur !== 'INR') document.getElementById('taxgroup').open = true;
+  renderLabels(); update();
+});
+document.getElementById('sys').addEventListener('change', function (e) { state.sys = e.target.value; renderLabels(); update(); });
+document.querySelectorAll('.seg button[data-tax]').forEach(function (b) {
+  b.addEventListener('click', function () { state.tax = b.dataset.tax === 'on'; renderLabels(); update(); });
+});
+document.querySelectorAll('.seg button[data-fresh]').forEach(function (b) {
+  b.addEventListener('click', function () { state.fresh = b.dataset.fresh === 'yes'; renderLabels(); update(); });
+});
+
+function read() {
+  var p = {}, ok = true;
+  Object.keys(FIELDS).forEach(function (key) {
+    var f = FIELDS[key], raw = els[key].num.value.trim(), v = +raw;
+    if ((!state.tax && TAX_KEYS.indexOf(key) >= 0) || (state.fresh && f.old)) { els[key].wrap.classList.remove('bad'); p[key] = 0; return; }
+    var good = raw !== '' && isFinite(v) && v >= f.min && v <= f.max && (!f.whole || Math.round(v) === v);
+    els[key].wrap.classList.toggle('bad', !good);
+    if (!good) { ok = false; var g = els[key].wrap.closest('details'); if (g) g.open = true; }
+    p[key] = v;
+  });
+  // Fresh money has no profit in it yet and no age. Already invested: profit (or loss) = value now − originally put in.
+  p.gain0 = state.fresh ? 0 : p.corpus - p.orig;
+  p.held0 = state.fresh ? 0 : p.yrs * 12;
+  p.tax = state.tax;
+  return ok ? p : null;
+}
+
+// Every box shows how long the money lasts in large type, and what is left (if anything) underneath.
+function outcomeCell(label, o, cls, years) {
+  var n, s;
+  if (!o) { n = '–'; s = 'outside the allowed range'; }
+  else if (o.ranOut) { n = shortDur(o.full); s = 'then it runs out'; }
+  else { n = 'Full ' + years + 'y'; s = words(o.leftAfterReal) + ' left, in today\'s money'; }
+  return '<div class="' + (cls || '') + '"><div class="r">' + label + '</div><div class="n">' + n + '</div><div class="s">' + s + '</div></div>';
+}
+
+function update() {
+  var p = read();
+  if (p && !state.fresh) {
+    gainNote.className = 'field-note' + (p.gain0 < 0 ? ' warn' : '');
+    gainNote.textContent = p.gain0 > 0 ? 'Profit in it now: ' + inr(p.gain0) + '.'
+      : p.gain0 < 0 ? 'You put in more than it is worth now, so you start at a loss of ' + inr(-p.gain0) + '. Withdrawals carry part of that loss, so there is less tax.'
+      : 'No profit or loss in it now.';
+  } else gainNote.textContent = '';
+  var results = document.getElementById('results'), chartCard = document.getElementById('chart-card');
+  results.classList.toggle('invalid', !p);
+  chartCard.classList.toggle('invalid', !p);
+  if (!p) return;
+  var o = project(p);
+
+  // Headline
+  if (o.ranOut) {
+    set('o-lbl', 'Your money lasts');
+    set('o-big', duration(o.full));
+    var part = Math.round(o.partial);
+    set('o-sub', o.full === 0
+      ? (part >= 1 ? 'Less than one withdrawal: a single part withdrawal of ' + inr(o.partial) + ', and the money is gone.' : 'The money is gone before the first withdrawal.')
+      : (part >= 1 ? 'Then a last part withdrawal of ' + inr(o.partial) + ', and the money is gone. Your plan was for ' + plural(p.years, 'year', 'years') + '.'
+                   : 'The last full withdrawal empties it. Your plan was for ' + plural(p.years, 'year', 'years') + '.'));
+  } else {
+    set('o-lbl', 'Lasts the full ' + plural(p.years, 'year', 'years') + '. Left in today\'s money');
+    set('o-big', words(o.leftAfterReal));
+    set('o-sub', inr(o.leftAfterReal) + ' at today\'s prices, after tax if you sold it all at the end');
+  }
+
+  set('o-start', inr(p.corpus) + '<small>' + words(p.corpus) + '</small>');
+  set('o-rate', 'In the first year you take out ' + pct(12 * p.monthly / p.corpus * 100) + ' of it');
+  set('o-out', inr(o.withdrawn) + '<small>' + words(o.withdrawn) + '</small>');
+  set('o-load', o.load >= 0.5 ? '−' + inr(o.load) : inr(0));
+  set('o-tax', (o.tax >= 0.5 ? '−' + inr(o.tax) : inr(0)) + '<small>' + (o.tax >= 0.5 ? words(o.tax) : 'no tax') + '</small>');
+  set('o-tax-split', !state.tax ? 'Tax is switched off' : o.tax < 0.5 ? 'No taxable gain' :
+      'Long-term ' + inr(o.taxLt) + ', short-term ' + inr(o.taxSt) + (p.cess > 0 ? ', cess included' : ''));
+  set('o-hand', inr(o.hand) + '<small>' + words(o.hand) + '</small>');
+  set('o-hand-real', inr(o.handReal) + '<small>' + words(o.handReal) + '</small>');
+  set('o-infl-note', 'At ' + pct(p.infl) + ' inflation a year');
+
+  document.getElementById('row-last').hidden = o.full === 0 || p.monthly === 0;
+  set('o-last', inr(o.lastFull) + '<small>' + inr(o.lastFullReal) + ' in today\'s money</small>');
+  set('o-last-note', p.stepup === 0 ? 'Same amount as the first, but it buys less by then' : 'Raised ' + pct(p.stepup) + ' a year from ' + inr(p.monthly));
+
+  document.getElementById('row-left').hidden = o.ranOut;
+  document.getElementById('row-left-real').hidden = o.ranOut;
+  set('o-left', inr(o.valueEnd) + '<small>' + words(o.valueEnd) + '</small>');
+  set('o-left-real', inr(o.leftAfterReal) + '<small>' + words(o.leftAfterReal) + '</small>');
+  set('o-sale-note', 'After ' + (o.saleLoad >= 0.5 ? 'exit load ' + inr(o.saleLoad) + ' and ' : '') + 'tax of ' + inr(o.saleTax) + ' on selling');
+
+  set('o-max', inr(maxMonthly(p)));
+  set('o-max-k', 'Largest monthly withdrawal that lasts the full ' + plural(p.years, 'year', 'years') +
+      '<small>' + (p.stepup > 0 ? 'Starting amount, then raised ' + pct(p.stepup) + ' a year' : 'The same amount every month') + ', at the return you entered</small>');
+
+  var c = project(p, { shortcut: true });
+  set('o-common', c.ranOut ? 'Runs out after ' + duration(c.full).toLowerCase() : 'Lasts, with ' + words(c.valueEnd) + ' left before tax');
+
+  // Range on return
+  set('range', [-2, 0, 2].map(function (d) {
+    var rt = p.ret + d, out = rt < FIELDS.ret.min || rt > FIELDS.ret.max;
+    return outcomeCell(pct(rt) + ' return', out ? null : (d === 0 ? o : project(p, { ret: rt })), d === 0 ? 'mid' : '', p.years);
+  }).join(''));
+
+  // Chart and table
+  var series = [{ year: 0, value: p.corpus, valueReal: p.corpus, cum: 0 }].concat(o.rows.map(function (r) {
+    return { year: r.year, value: r.value, valueReal: r.valueReal, cum: r.cumHandReal };
+  }));
+  drawChart(series);
+  set('tbody', o.rows.map(function (r) {
+    return '<tr><td>' + r.year + '</td><td>' + inr(r.withdrawn) + '</td><td>' + inr(r.load) + '</td><td>' + inr(r.tax) +
+           '</td><td>' + inr(r.hand) + '</td><td>' + inr(r.value) + '</td><td>' + inr(r.valueReal) + '</td></tr>';
+  }).join(''));
+  placeResults();
+}
+function set(id, html) { document.getElementById(id).innerHTML = html; }
+
+var lastRows = [];
+function drawChart(rows) {
+  lastRows = rows;
+  var svg = document.getElementById('chart');
+  var W = Math.max(300, Math.round(svg.clientWidth || 600)), H = W < 500 ? 240 : 300, L = 52, R = 10, T = 12, B = 28;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  var max = 0;
+  rows.forEach(function (r) { max = Math.max(max, r.value, r.valueReal, r.cum); });
+  if (max <= 0) max = 1;
+  var mag = Math.pow(10, Math.floor(Math.log10(max)));
+  var nice = [1, 2, 2.5, 5, 10].map(function (k) { return k * mag; }).filter(function (v) { return v >= max; })[0] || max;
+  var x = function (i) { return L + i * (W - L - R) / (rows.length - 1); };
+  var y = function (v) { return T + (H - T - B) * (1 - v / nice); };
+  var s = '';
+  for (var g = 0; g <= 4; g++) {
+    var gv = nice * g / 4, gy = y(gv);
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '" stroke="rgba(255,255,255,0.07)"/>';
+    s += '<text x="' + (L - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + short(gv) + '</text>';
+  }
+  var every = Math.max(1, Math.ceil(rows.length / (W < 500 ? 5 : 8)));
+  rows.forEach(function (r, i) {
+    if (i % every === 0) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">Y' + r.year + '</text>';
+  });
+  function line(key, color, w) {
+    var d = rows.map(function (r, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(Math.max(0, r[key])).toFixed(1); }).join(' ');
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + w + '" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  s += line('cum', '#6e6e73', 2) + line('value', '#f5f5f7', 2.5) + line('valueReal', '#E50914', 3);
+  s += '<line id="cursor" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3 3" visibility="hidden"/>';
+  s += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" fill="transparent" id="hit"/>';
+  svg.innerHTML = s;
+  document.getElementById('tip').textContent = 'Tap or hover on the chart to see a year.';
+  var hit = svg.querySelector('#hit'), cur = svg.querySelector('#cursor');
+  function show(evt) {
+    var pt = evt.touches ? evt.touches[0] : evt;
+    var box = svg.getBoundingClientRect();
+    var sx = (pt.clientX - box.left) * W / box.width;
+    var i = Math.max(0, Math.min(rows.length - 1, Math.round((sx - L) / ((W - L - R) / (rows.length - 1)))));
+    var r = rows[i];
+    cur.setAttribute('x1', x(i)); cur.setAttribute('x2', x(i)); cur.setAttribute('visibility', 'visible');
+    document.getElementById('tip').textContent = (r.year === 0 ? 'Start' : 'Year ' + r.year) + ': value left ' + words(r.value) +
+      ', in today\'s money ' + words(r.valueReal) + ', received so far ' + words(r.cum) + ' (today\'s money)';
+  }
+  hit.addEventListener('mousemove', show);
+  hit.addEventListener('touchstart', show, { passive: true });
+  hit.addEventListener('touchmove', show, { passive: true });
+}
+
+// Where the results stop while scrolling: just below the nav, so the headline always stays in view.
+function placeResults() {
+  var col = document.getElementById('results-col');
+  if (window.innerWidth <= 900) { col.style.top = ''; return; }
+  var nav = document.querySelector('nav');
+  col.style.top = ((nav ? nav.offsetHeight : 0) + 16) + 'px';
+}
+
+window.calcReset = function () {
+  state.cur = 'INR'; state.sys = 'lakh'; state.tax = true; state.fresh = true; taxTouched = false;
+  setDefaults(); renderLabels(); update();
+};
+setDefaults();
+renderLabels();
+update();
+var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (lastRows.length) drawChart(lastRows); placeResults(); }, 150); });
+document.querySelectorAll('details.group').forEach(function (d) { d.addEventListener('toggle', placeResults); });
+window.addEventListener('load', placeResults);
+</script>
+</body>
+</html>
