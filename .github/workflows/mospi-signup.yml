@@ -100,7 +100,8 @@ jobs:
                   return 1
 
               # 1. Sign up (if the account already exists, MoSPI says so and we carry on).
-              body = {"username": "infinitybyyam", "email": EMAIL, "password": PASSWORD,
+              # MoSPI asks for the email address in the username field too.
+              body = {"username": EMAIL, "email": EMAIL, "password": PASSWORD,
                       "organization": "InfinitybyYam", "purpose": "Personal inflation calculator on a public website"}
               code, resp = call("POST", "/api/users/usersignup", body=body)
               if code >= 400 and code != 409:
