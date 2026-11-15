@@ -1,0 +1,340 @@
+name: Update inflation data
+
+# Asks MoSPI once a day for the latest Consumer Price Index figures (Base 2024=100)
+# and saves them as Calculators/cpi.json for the Personal Inflation Calculator.
+# MoSPI's data API is open, so no login is needed. If nothing changed, nothing is committed.
+# If the figures look wrong, the old file is kept and this run shows a red mark.
+# Older figures never replace newer ones.
+
+on:
+  schedule:
+    - cron: "43 2 * * *"   # every day at 02:43 UTC (08:13 India time)
+  workflow_dispatch:        # adds a "Run workflow" button to run it by hand
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the site files
+        uses: actions/checkout@v4
+
+      - name: Get the latest CPI figures from MoSPI
+        run: |
+          python3 - <<'PY'
+          """Fetch India's latest Consumer Price Index (Base 2024=100) division figures from MoSPI
+          and save them as Calculators/cpi.json for the Personal Inflation Calculator.
+
+          Safety rules:
+          - If anything looks wrong, the old file is kept and the run fails, so GitHub shows a red mark.
+          - Older data never replaces newer data.
+          - The division weights are fixed for the whole 2024 series. If MoSPI ever re-bases the CPI,
+            the check against the official headline fails and the old file is kept.
+          """
+          import datetime
+          import json
+          import ssl
+          import sys
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          API = "https://api.mospi.gov.in"
+          OUT = "Calculators/cpi.json"
+          UA = ("Mozilla/5.0 (compatible; InfinityByYam-InflationCalculator/1.0; "
+                "+https://infinitybyyam.github.io/Calculators/personal_inflation_calculator.html)")
+
+          # Weights (%) from the first press release of CPI (Base 2024=100), MoSPI, 12 February 2026.
+          # code, name, rural, urban, combined
+          DIVISIONS = [
+              ("01", "Food and beverages", 41.983, 30.251, 36.753),
+              ("02", "Paan, tobacco and intoxicants", 3.733, 2.065, 2.989),
+              ("03", "Clothing and footwear", 7.123, 5.464, 6.383),
+              ("04", "Housing, water, electricity, gas and other fuels", 11.764, 25.000, 17.665),
+              ("05", "Furnishings, household equipment and routine household maintenance", 4.609, 4.296, 4.469),
+              ("06", "Health", 6.764, 5.275, 6.100),
+              ("07", "Transport", 8.644, 8.985, 8.796),
+              ("08", "Information and communication", 3.647, 3.563, 3.609),
+              ("09", "Recreation, sport and culture", 1.359, 1.710, 1.516),
+              ("10", "Education services", 2.383, 4.515, 3.333),
+              ("11", "Restaurants and accommodation services", 2.841, 3.978, 3.348),
+              ("13", "Personal care, social protection and miscellaneous goods and services", 5.150, 4.899, 5.038),
+          ]
+          CODES = [d[0] for d in DIVISIONS]
+          SECTORS = ["rural", "urban", "combined"]
+          MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+                    "August", "September", "October", "November", "December"]
+
+
+          # ---------------------------------------------------------------- talking to MoSPI
+          def make_ctx(verify):
+              ctx = ssl.create_default_context()
+              # MoSPI's server needs old-style TLS renegotiation, which newer OpenSSL turns off by default.
+              ctx.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+              if not verify:
+                  ctx.check_hostname = False
+                  ctx.verify_mode = ssl.CERT_NONE
+              return ctx
+
+
+          CTX = {"ctx": make_ctx(True), "verified": True}
+
+
+          def http(method, path, params=None, body=None, headers=None):
+              url = API + path + ("?" + urllib.parse.urlencode(params) if params else "")
+              data = json.dumps(body).encode("utf-8") if body is not None else None
+              h = {"User-Agent": UA, "Accept": "application/json"}
+              if data is not None:
+                  h["Content-Type"] = "application/json"
+              h.update(headers or {})
+              last = None
+              for attempt in range(3):
+                  req = urllib.request.Request(url, data=data, headers=h, method=method)
+                  try:
+                      with urllib.request.urlopen(req, timeout=60, context=CTX["ctx"]) as r:
+                          return json.loads(r.read().decode("utf-8"))
+                  except urllib.error.HTTPError as e:
+                      if e.code in (429, 500, 502, 503, 504) and attempt < 2:
+                          last = e
+                          time.sleep(5 * (attempt + 1))
+                          continue
+                      raise
+                  except urllib.error.URLError as e:
+                      if isinstance(e.reason, ssl.SSLCertVerificationError) and CTX["verified"]:
+                          # Some government servers send an incomplete certificate chain. The figures are
+                          # still checked against the official headline below before anything is saved.
+                          print("Warning: MoSPI's certificate could not be verified; retrying without verification.")
+                          CTX["ctx"], CTX["verified"] = make_ctx(False), False
+                          continue
+                      last = e
+                      time.sleep(5 * (attempt + 1))
+              raise last
+
+
+          def get_cpi(params):
+              return http("GET", "/api/cpi/getCPIData", params=params)
+
+
+          # ---------------------------------------------------------------- reading the answer
+          def rows_of(resp):
+              if not isinstance(resp, dict):
+                  return []
+              d = resp.get("data")
+              if isinstance(d, list):
+                  return d
+              if isinstance(d, dict):
+                  for k in ("records", "data", "rows"):
+                      if isinstance(d.get(k), list):
+                          return d[k]
+              return []
+
+
+          def blank(v):
+              return v is None or str(v).strip().lower() in ("", "null", "none", "-", "na")
+
+
+          def month_num(v):
+              s = str(v).strip()
+              if s.isdigit():
+                  n = int(s)
+                  return n if 1 <= n <= 12 else None
+              s = s.title()
+              for i, name in enumerate(MONTHS):
+                  if s == name or s == name[:3]:
+                      return i + 1
+              return None
+
+
+          def add_row(pool, row):
+              """Keep only All-India rows at division level (or the general index) for the 2024 series."""
+              if not isinstance(row, dict):
+                  return
+              if str(row.get("state", "")).strip().lower() != "all india":
+                  return
+              if any(not blank(row.get(k)) for k in ("group", "class", "sub_class", "item")):
+                  return
+              if not blank(row.get("base_year")) and str(row.get("base_year")).strip() != "2024":
+                  return
+              if not blank(row.get("series")) and str(row.get("series")).strip().lower() != "current":
+                  return
+              sector = str(row.get("sector", "")).strip().lower()
+              if sector not in SECTORS:
+                  return
+              m = month_num(row.get("month"))
+              try:
+                  y = int(str(row.get("year")).strip())
+                  idx = float(row.get("index"))
+                  inf = float(row.get("inflation"))
+              except (TypeError, ValueError):
+                  return
+              if m is None:
+                  return
+              code = row.get("code")
+              division = str(row.get("division", "")).strip().lower()
+              if blank(code):
+                  if "general" not in division:
+                      return
+                  code = "00"
+              else:
+                  code = str(code).strip().zfill(2)
+                  if code not in CODES:
+                      return
+              pool.setdefault((y, m), {}).setdefault(sector, {})[code] = (idx, inf)
+
+
+          def complete(month_data, sector):
+              s = (month_data or {}).get(sector, {})
+              return "00" in s and all(c in s for c in CODES)
+
+
+          def check(month_data, sector):
+              """The division figures, weighted, must give back the official headline. Returns a problem or None."""
+              col = SECTORS.index(sector) + 2
+              s = month_data[sector]
+              for c in ["00"] + CODES:
+                  idx, inf = s[c]
+                  if not (50 <= idx <= 400) or not (-40 <= inf <= 100):
+                      return f"{sector} {c}: index {idx} / inflation {inf} out of range"
+              now = sum(d[col] * s[d[0]][0] for d in DIVISIONS)
+              ago = sum(d[col] * s[d[0]][0] / (1 + s[d[0]][1] / 100) for d in DIVISIONS)
+              total = sum(d[col] for d in DIVISIONS)
+              calc_idx = now / total
+              calc_inf = (now / ago - 1) * 100
+              off_idx, off_inf = s["00"]
+              if abs(calc_idx - off_idx) > 0.15 or abs(calc_inf - off_inf) > 0.1:
+                  return (f"{sector}: weighted divisions give index {calc_idx:.2f} / inflation {calc_inf:.2f}, "
+                          f"official is {off_idx:.2f} / {off_inf:.2f} (weights may be out of date)")
+              return None
+
+
+          # ---------------------------------------------------------------- main
+          def main():
+              pool = {}
+              base = {"base_year": "2024", "series": "Current", "Format": "JSON"}
+
+              # Ask for one month at a time, newest first: All India, rural/urban/combined,
+              # the general index and the 12 divisions. No login is needed for this.
+              today = datetime.date.today()
+              y, m = today.year, today.month
+              failures = 0
+              for _ in range(9):
+                  failed = False
+                  params = dict(base, year=str(y), month_code=str(m), state_code="1", sector_code="1,2,3",
+                                division_code=",".join(str(i) for i in range(13)), limit="200")
+                  for page in range(1, 11):
+                      params["page"] = str(page)
+                      try:
+                          resp = get_cpi(params)
+                      except Exception as e:  # noqa: BLE001
+                          print(f"{MONTHS[m-1]} {y} page {page}: request failed ({e})")
+                          failed = True
+                          break
+                      rows = rows_of(resp)
+                      for r in rows:
+                          add_row(pool, r)
+                      meta = (resp.get("meta_data") or {}) if isinstance(resp, dict) else {}
+                      if complete(pool.get((y, m)), "combined") or not rows:
+                          break
+                      try:
+                          if page >= int(meta.get("totalPages", 1)):
+                              break
+                      except (TypeError, ValueError):
+                          break
+                  got = complete(pool.get((y, m)), "combined")
+                  print(f"{MONTHS[m-1]} {y}: {'complete' if got else ('could not ask' if failed else 'not published yet')}")
+                  if got:
+                      break
+                  failures = failures + 1 if failed else 0
+                  if failures >= 2:
+                      print("MoSPI could not be reached twice in a row; stopping. The file is unchanged.")
+                      break
+                  m -= 1
+                  if m == 0:
+                      y, m = y - 1, 12
+
+              months = sorted((k for k in pool if complete(pool[k], "combined")), reverse=True)
+              if not months:
+                  found = {f"{MONTHS[k[1]-1]} {k[0]}": {s: len(v) for s, v in pool[k].items()} for k in pool}
+                  print(f"No complete month found. Rows found: {found}")
+                  return 1
+              y, m = months[0]
+              md = pool[(y, m)]
+
+              problem = check(md, "combined")
+              if problem:
+                  print("Check failed, keeping the old file: " + problem)
+                  return 1
+              sectors = ["combined"]
+              for s in ("rural", "urban"):
+                  if complete(md, s) and not check(md, s):
+                      sectors.append(s)
+              sectors = [s for s in SECTORS if s in sectors]
+
+              # Never go backwards.
+              old = None
+              try:
+                  with open(OUT, encoding="utf-8") as f:
+                      old = json.load(f)
+              except (OSError, ValueError):
+                  pass
+              if old and (old.get("dataYear", 0), old.get("dataMonth", 0)) > (y, m):
+                  print(f"MoSPI gave {MONTHS[m-1]} {y}, older than the file's {old.get('dataLabel')}; keeping the file.")
+                  return 0
+
+              out = {
+                  "series": "Consumer Price Index (Base 2024=100)",
+                  "source": "National Statistics Office, Ministry of Statistics and Programme Implementation (MoSPI), Government of India",
+                  "sourceUrl": "https://esankhyiki.mospi.gov.in/macroindicators?product=cpi",
+                  "weightsSource": "First press release of CPI (Base 2024=100), MoSPI, 12 February 2026",
+                  "fetchedVia": "MoSPI API (api.mospi.gov.in)",
+                  "dataYear": y,
+                  "dataMonth": m,
+                  "dataLabel": f"{MONTHS[m-1]} {y}",
+                  "updated": datetime.date.today().isoformat(),
+                  "headline": {s: {"index": md[s]["00"][0], "inflation": md[s]["00"][1]} for s in sectors},
+                  "divisions": [
+                      {
+                          "code": code,
+                          "name": name,
+                          "weight": {s: w for s, w in zip(SECTORS, (wr, wu, wc)) if s in sectors},
+                          "index": {s: md[s][code][0] for s in sectors},
+                          "inflation": {s: md[s][code][1] for s in sectors},
+                      }
+                      for code, name, wr, wu, wc in DIVISIONS
+                  ],
+              }
+
+              if old:
+                  same = {k: v for k, v in old.items() if k not in ("updated", "fetchedVia")} == \
+                         {k: v for k, v in out.items() if k not in ("updated", "fetchedVia")}
+                  if same:
+                      print(f"No change: still {out['dataLabel']}.")
+                      return 0
+
+              with open(OUT, "w", encoding="utf-8") as f:
+                  json.dump(out, f, ensure_ascii=False, indent=1)
+                  f.write("\n")
+              print(f"Saved {out['dataLabel']}: official inflation {out['headline']['combined']['inflation']}% "
+                    f"(sectors: {', '.join(sectors)}).")
+              return 0
+
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PY
+
+      - name: Save it if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add Calculators/cpi.json
+          if git diff --cached --quiet; then
+            echo "No change today."
+          else
+            git commit -m "Update CPI data from MoSPI"
+            git pull --rebase
+            git push
+          fi
