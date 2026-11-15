@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Inflation Calculator · Infinity by Yam</title>
+<meta name="description" content="Enter what your household spends in a year and see your own inflation next to India's official rate. Government figures from MoSPI, refreshed automatically.">
+<link rel="icon" type="image/png" sizes="32x32" href="https://infinitybyyam.github.io/favicon-32.png">
+<link rel="stylesheet" href="https://infinitybyyam.github.io/Calculators/calc-frame.css">
+<style>
+  /* SOURCE AND DATE */
+  .srcrow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem; margin: -1.5rem 0 2rem; }
+  .pill { display: inline-flex; align-items: center; gap: .5rem; font-size: .8rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--line); padding: .4rem .8rem; border-radius: 999px; text-decoration: none; max-width: 100%; }
+  .pill i { width: 8px; height: 8px; border-radius: 50%; background: #46d369; flex-shrink: 0; animation: pulse 2s infinite; }
+  .pill.src { margin-left: auto; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(70,211,105,.55); } 70% { box-shadow: 0 0 0 8px rgba(70,211,105,0); } 100% { box-shadow: 0 0 0 0 rgba(70,211,105,0); } }
+
+  .loadmsg { color: var(--muted); }
+  .loaderr { display: none; background: rgba(229,9,20,.08); border: 1px solid rgba(229,9,20,.35); border-radius: 4px; padding: 1rem; font-size: .92rem; }
+  .failed .loaderr { display: block; }
+  .failed .needs-data, .loading .needs-data { display: none; }
+  .loaded .loadmsg { display: none; }
+
+  /* AREA SWITCH */
+  .area { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; padding: .25rem 0 1.1rem; margin: .75rem 0 1.1rem; border-bottom: 1px solid var(--line); }
+  .area[hidden] { display: none; }
+  .area-label { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; overflow: hidden; flex-shrink: 0; max-width: 100%; }
+  .seg button { background: transparent; color: var(--muted); border: none; padding: .5rem 1rem; font: 600 .8rem 'DM Sans', sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .seg button + button { border-left: 1px solid rgba(255,255,255,.1); }
+  .seg button.on { background: var(--red); color: #fff; }
+  .seg button[hidden] { display: none; }
+
+  /* DIVISION TABLE: division, govt weight, inflation, your yearly spend, your weight */
+  .tr { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem 10rem 5.5rem; gap: .75rem; align-items: center; padding: .8rem 0; border-bottom: 1px solid var(--line); }
+  .tr.th { padding: 0 0 .6rem; font-size: .7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--faint); align-items: end; }
+  .tr.th span:not(:first-child), .num { text-align: right; }
+  .dname { min-width: 0; }
+  .dname strong { display: block; font-weight: 600; font-size: .92rem; color: var(--text); line-height: 1.35; }
+  .dname small { display: block; font-size: .78rem; color: var(--faint); line-height: 1.4; margin-top: .15rem; }
+  .num { font-variant-numeric: tabular-nums; font-size: .92rem; color: var(--muted); min-width: 0; }
+  .num .lab { display: none; }
+  .num.mine { color: var(--text); font-weight: 600; }
+  .cell-spend { display: flex; justify-content: flex-end; min-width: 0; }
+  .cell-spend .box { width: 100%; }
+  .cell-spend .box input { width: 100%; min-width: 0; }
+  .tr.bad .box { border-color: var(--red); }
+  .tr.total { border-bottom: none; font-weight: 600; }
+  .tr.total .dname strong { text-transform: uppercase; letter-spacing: 1px; font-size: .8rem; color: var(--muted); }
+  .tr.total .num { color: var(--text); }
+  .note { font-size: .82rem; color: #ff8a90; line-height: 1.5; margin-top: .75rem; min-height: 1.2em; }
+
+  /* RESULT */
+  .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .rate { background: var(--surface2); border: 1px solid var(--line); border-radius: 6px; padding: 1.1rem 1.2rem; min-width: 0; }
+  .rate.you { border-color: rgba(229,9,20,.45); background: rgba(229,9,20,.06); }
+  .rate .lbl { font-size: .75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .rate .big { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1.05; letter-spacing: 1px; font-variant-numeric: tabular-nums; color: var(--text); overflow-wrap: anywhere; }
+  .rate.you .big { color: var(--red); }
+  .rate .sub { font-size: .82rem; color: var(--faint); line-height: 1.45; }
+  .verdict { margin-top: 1.25rem; color: var(--muted); font-size: .95rem; }
+  .verdict strong { color: var(--text); }
+  .msg { display: none; background: rgba(229,9,20,.08); border: 1px solid rgba(229,9,20,.35); border-radius: 4px; padding: 1rem; color: var(--text); font-size: .92rem; margin-top: 1rem; }
+  .invalid .msg { display: block; }
+  .invalid .needs-valid { display: none; }
+
+  /* PHONES: each division becomes a small block, name on top, four figures in two rows under it */
+  @media (max-width: 760px) {
+    .tr.th { display: none; }
+    .tr { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .9rem; padding: .9rem 0; align-items: start; }
+    .dname { grid-column: 1 / -1; }
+    .num { text-align: left; }
+    .num .lab { display: block; font-size: .65rem; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); margin-bottom: .15rem; }
+    .cell-spend { display: block; }
+    .tr.total .num:empty { display: none; }
+    .duo { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .seg button { padding: .5rem .75rem; letter-spacing: .6px; }
+    .cell-spend .box { padding: 0 .4rem; }
+    .cell-spend .box input { font-size: .9rem; padding: .45rem .15rem; }
+  }
+</style>
+</head>
+<body>
+<script src="https://infinitybyyam.github.io/Calculators/calc-frame.js"></script>
+
+<main class="page loading" id="page">
+  <div class="glow"></div>
+  <div class="section-label">Calculators</div>
+  <h1>Personal Inflation <span class="accent">Calculator</span></h1>
+  <p class="intro">The government's inflation rate is an average for all households. Yours depends on what you spend on. Enter your yearly spending to see it.</p>
+
+  <div class="srcrow">
+    <span class="pill"><i></i><span id="asof">Loading the latest figures…</span></span>
+    <span class="pill src">Source: MoSPI</span>
+  </div>
+
+  <p class="loadmsg">Loading the latest government figures…</p>
+  <div class="loaderr">The government figures could not be loaded just now. Please refresh the page in a minute.</div>
+
+  <section class="card needs-data" aria-label="Your spending">
+    <div class="eyebrow">Your spending</div>
+    <h2>What you spend in a year</h2>
+    <div class="area" id="area">
+      <span class="area-label" id="area-label">Where you live</span>
+      <div class="seg" role="group" aria-labelledby="area-label">
+        <button type="button" data-sector="combined" class="on" aria-pressed="true">All India</button>
+        <button type="button" data-sector="urban" aria-pressed="false">Urban</button>
+        <button type="button" data-sector="rural" aria-pressed="false">Rural</button>
+      </div>
+    </div>
+    <p class="hint">Enter roughly what your household spends in a year on each area; a monthly bill times 12 is close enough. Your weight is worked out for you. The amounts already filled in are an example: a household spending ₹6,00,000 a year, split like the average household in the area you picked. Leave out loan EMIs, savings and investments, and income tax; they aren’t spending on goods and services.</p>
+
+    <div role="table" aria-label="Divisions, weights, inflation and your spending">
+      <div class="tr th" role="row"><span role="columnheader">Division</span><span role="columnheader">Govt weight</span><span role="columnheader">Inflation</span><span role="columnheader">Your yearly spend</span><span role="columnheader">Your weight</span></div>
+      <div id="rows" role="rowgroup"></div>
+      <div class="tr total" role="row">
+        <div class="dname" role="cell"><strong>Total</strong></div>
+        <div class="num" role="cell"><span class="lab">Govt weight</span>100.0%</div>
+        <div class="num" role="cell"></div>
+        <div class="num" role="cell"><span class="lab">Your yearly spend</span><span id="t-spend"></span></div>
+        <div class="num" role="cell"><span class="lab">Your weight</span><span id="t-you"></span></div>
+      </div>
+    </div>
+    <p class="note" id="note"></p>
+  </section>
+
+  <section class="card needs-data" id="results" aria-live="polite">
+    <div class="eyebrow">Result</div>
+    <h2>The government's inflation and yours</h2>
+    <div class="msg" id="msg">Fix the highlighted amount, or enter at least one amount above zero, to see your inflation.</div>
+    <div class="needs-valid">
+      <div class="duo">
+        <div class="rate">
+          <div class="lbl">Government</div>
+          <div class="big" id="o-gov">–</div>
+          <div class="sub"><span id="o-area">All-India</span> retail inflation, <span id="o-month"></span> compared with a year earlier</div>
+        </div>
+        <div class="rate you">
+          <div class="lbl">Yours</div>
+          <div class="big" id="o-you">–</div>
+          <div class="sub">Same prices, your spending</div>
+        </div>
+      </div>
+      <p class="verdict" id="o-gap"></p>
+    </div>
+  </section>
+
+  <section class="card disclaimer" style="margin-top:2rem">
+    <div class="eyebrow">Please read</div>
+    <p>This uses the government's price figures for each area of spending and your own split of spending. It can't see the actual prices you pay, the brands you buy or the city you live in, so it is an estimate.</p>
+  </section>
+
+  <section class="card how">
+    <div class="eyebrow">How this is calculated</div>
+    <h2>The method, in plain words</h2>
+    <p><strong>The government's figure.</strong> It comes from the Consumer Price Index published by the National Statistics Office, Ministry of Statistics and Programme Implementation. It shows how much prices in the latest month published are higher than in the same month a year earlier, for all of India, urban areas or rural areas, whichever you pick.</p>
+    <p><strong>Divisions and weights.</strong> The index sorts everything households buy into 12 divisions. Each division's government weight is the share of an average household's spending that goes there, from the Household Consumption Expenditure Survey. Urban and rural households spend differently, so each has its own weights and its own price changes.</p>
+    <p><strong>Your inflation.</strong> Your spend on a division divided by your total spend is your weight for it. Each division's price rise over the year is then counted by your weight instead of the government's. If your spending is split exactly like the government's, you get exactly the official figure. The published figures are rounded, so your figure is worked out as the official rate plus the difference between your basket and the government's basket, both calculated the same way.</p>
+  </section>
+
+  <div data-calc-end></div>
+</main>
+
+<script>
+var DATA_URL = 'cpi.json';   // kept next to this page; refreshed by GitHub when MoSPI publishes a new month
+var EXAMPLE_TOTAL = 600000;  // example household spend a year, split by the government's weights
+
+// Short examples of what falls in each division (CPI 2024 uses the UN's COICOP 2018 groups).
+var HINTS = {
+  '01': 'e.g. groceries, vegetables, milk, tea, packaged food',
+  '02': 'e.g. paan, cigarettes, alcohol',
+  '03': 'e.g. clothes, shoes, tailoring',
+  '04': 'e.g. rent, repairs, water, electricity, cooking gas',
+  '05': 'e.g. furniture, appliances, utensils, household help',
+  '06': 'e.g. medicines, doctor fees, hospital, tests',
+  '07': 'e.g. petrol, vehicle costs, bus, train and air fares',
+  '08': 'e.g. mobile and internet bills, phones, laptops',
+  '09': 'e.g. outings, hobbies, books, entertainment',
+  '10': 'e.g. school and college fees, coaching',
+  '11': 'e.g. eating out, food delivery, hotel stays',
+  '13': 'e.g. salon, toiletries, jewellery, other items'
+};
+
+var RAW = null, SECTOR = 'combined', D = [], GOV = 0, MONTH = '', touched = [];
+var SECTORS = ['combined', 'urban', 'rural'];
+var AREA = { combined: 'All-India', urban: 'Urban', rural: 'Rural' };
+var $ = function (id) { return document.getElementById(id); };
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pct(x, dp) { var v = x.toFixed(dp); if (/^-0\.0+$/.test(v)) v = v.slice(1); return v.replace('-', '−') + '%'; }
+function rupees(x) { return Math.round(x).toLocaleString('en-IN'); }
+// Example amounts split by the government's weights, adding up to exactly EXAMPLE_TOTAL.
+function examples() {
+  var a = D.map(function (d) { return Math.round(EXAMPLE_TOTAL * d.weight / 100); });
+  var big = 0; a.forEach(function (v, i) { if (v > a[big]) big = i; });
+  a[big] += EXAMPLE_TOTAL - a.reduce(function (t, v) { return t + v; }, 0);
+  return a;
+}
+function fmtDate(d) { if (!d) return ''; var x = new Date(d + 'T00:00:00'); return isNaN(x) ? d : x.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+
+// Reads an amount typed with or without commas or a rupee sign. NaN if it isn't a number.
+function parseAmount(s) {
+  var t = String(s).replace(/[₹,\s]/g, '');
+  if (t === '') return 0;
+  return /^\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
+}
+
+// Rise in the basket's cost over a year, for the given weights, worked from index levels.
+function basketRate(ws) {
+  var now = 0, ago = 0;
+  D.forEach(function (d, i) {
+    var w = ws[i]; if (!w) return;
+    now += w * d.index;
+    ago += w * d.index / (1 + d.inflation / 100);
+  });
+  return ago > 0 ? (now / ago - 1) * 100 : NaN;
+}
+
+function render() {
+  var h = '', ex = examples();
+  D.forEach(function (d, i) {
+    h += '<div class="tr" role="row" id="r' + i + '">' +
+      '<div class="dname" role="cell"><strong>' + esc(d.name) + '</strong><small>' + esc(HINTS[d.code] || '') + '</small></div>' +
+      '<div class="num" role="cell"><span class="lab">Govt weight</span>' + d.weight.toFixed(1) + '%</div>' +
+      '<div class="num" role="cell"><span class="lab">Inflation</span>' + pct(d.inflation, 2) + '</div>' +
+      '<div class="num cell-spend" role="cell"><span class="lab">Your yearly spend</span>' +
+        '<div class="box"><span>₹</span><input type="text" inputmode="numeric" autocomplete="off" id="s' + i + '" aria-label="Your yearly spend on ' + esc(d.name) + ', in rupees" value="' + rupees(ex[i]) + '"></div>' +
+      '</div>' +
+      '<div class="num mine" role="cell"><span class="lab">Your weight</span><span id="w' + i + '"></span></div>' +
+    '</div>';
+  });
+  $('rows').innerHTML = h;
+  D.forEach(function (d, i) {
+    var el = $('s' + i);
+    el.addEventListener('input', function () { touched[i] = true; update(); });
+    el.addEventListener('blur', function () { var v = parseAmount(el.value); if (isFinite(v) && el.value.trim() !== '') el.value = rupees(v); });
+  });
+  $('o-gov').textContent = pct(GOV, 2);
+  $('o-area').textContent = AREA[SECTOR];
+  $('o-month').textContent = MONTH;
+}
+
+function update() {
+  var amts = [], bad = false, total = 0;
+  D.forEach(function (d, i) {
+    var v = parseAmount($('s' + i).value);
+    var rowBad = !isFinite(v) || v < 0 || v > 1e9;
+    $('r' + i).classList.toggle('bad', rowBad);
+    if (rowBad) { bad = true; amts.push(0); return; }
+    amts.push(v); total += v;
+  });
+  $('t-spend').textContent = '₹' + rupees(total);
+  D.forEach(function (d, i) { $('w' + i).textContent = (!bad && total > 0) ? (amts[i] / total * 100).toFixed(1) + '%' : '–'; });
+  $('t-you').textContent = (!bad && total > 0) ? '100.0%' : '–';
+  $('note').textContent = bad ? 'Enter each amount in rupees, using numbers only.' : '';
+
+  var res = $('results');
+  if (bad || total <= 0) { res.classList.add('invalid'); return; }
+  res.classList.remove('invalid');
+
+  var gw = D.map(function (d) { return d.weight; });
+  // Until any amount is changed, the example split is exactly the government's.
+  var ws = touched.some(Boolean) ? amts : gw;
+  var mine = GOV + (basketRate(ws) - basketRate(gw));
+  $('o-you').textContent = pct(mine, 2);
+  var gap = Math.round((mine - GOV) * 100) / 100;
+  var g = $('o-gap');
+  if (gap === 0) g.innerHTML = 'Your inflation is <strong>the same</strong> as the government\'s.';
+  else g.innerHTML = 'Your inflation is <strong>' + Math.abs(gap).toFixed(2) + ' percentage points ' + (gap > 0 ? 'higher' : 'lower') + '</strong> than the government\'s.';
+}
+
+// Does the data hold a full set of figures for this area?
+function sectorOK(data, s) {
+  var h = data.headline && data.headline[s];
+  if (!h || !isFinite(h.inflation)) return false;
+  var ds = data.divisions || [];
+  return ds.length === 12 && ds.every(function (d) {
+    return d && d.weight && d.index && d.inflation && isFinite(d.weight[s]) && isFinite(d.index[s]) && isFinite(d.inflation[s]);
+  });
+}
+
+// Switch area: government weights and price changes change; amounts the user typed stay.
+function setSector(s) {
+  var kept = D.map(function (d, i) { var el = $('s' + i); return el ? el.value : ''; });
+  SECTOR = s;
+  D = RAW.divisions.map(function (d) {
+    return { code: d.code, name: d.name, weight: d.weight[s], index: d.index[s], inflation: d.inflation[s] };
+  });
+  GOV = RAW.headline[s].inflation;
+  render();
+  D.forEach(function (d, i) { if (touched[i]) $('s' + i).value = kept[i]; });
+  document.querySelectorAll('[data-sector]').forEach(function (b) {
+    var on = b.getAttribute('data-sector') === s;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  });
+  update();
+}
+
+window.calcReset = function () {
+  if (!RAW) return;
+  touched = [];
+  setSector('combined');
+};
+
+function load() {
+  var page = $('page');
+  fetch(DATA_URL, { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (data) {
+      if (!sectorOK(data, 'combined')) throw new Error('bad data');
+      RAW = data;
+      var have = SECTORS.filter(function (s) { return sectorOK(data, s); });
+      // Show only the areas the data covers; with all-India alone, hide the switch.
+      document.querySelectorAll('[data-sector]').forEach(function (b) {
+        b.hidden = have.indexOf(b.getAttribute('data-sector')) < 0;
+        b.addEventListener('click', function () { setSector(b.getAttribute('data-sector')); });
+      });
+      $('area').hidden = have.length < 2;
+      MONTH = data.dataLabel || '';
+      $('asof').textContent = 'Data for ' + MONTH + ' · updated ' + fmtDate(data.updated);
+      setSector('combined');
+      page.classList.remove('loading'); page.classList.add('loaded');
+    })
+    .catch(function () {
+      $('asof').textContent = 'Figures unavailable';
+      page.classList.remove('loading'); page.classList.add('failed', 'loaded');
+    });
+}
+load();
+</script>
+</body>
+</html>
