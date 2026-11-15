@@ -98,6 +98,90 @@
 
   .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); }
 
+  /* ── PRODUCTS MENU (header only) ── */
+  .nav-links > li { position: relative; }
+
+  .nav-drop-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    line-height: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s ease;
+  }
+
+  .nav-drop-btn:hover, .nav-drop-btn[aria-expanded="true"] { color: var(--text); }
+  .nav-drop-btn .caret { font-size: 0.6rem; transition: transform 0.2s ease; }
+  .nav-drop-btn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 1.1rem);
+    right: 0;
+    min-width: 230px;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top: 2px solid var(--red);
+    border-radius: 4px;
+    padding: 0.4rem 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+
+  .nav-menu.open { display: block; }
+
+  .nav-menu .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.75rem 1.1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .nav-menu button.item:hover, .nav-menu button.item[aria-expanded="true"] { color: var(--text); }
+  .nav-menu button.item .caret { font-size: 0.6rem; color: var(--red); transition: transform 0.2s ease; }
+  .nav-menu button.item[aria-expanded="true"] .caret { transform: rotate(90deg); }
+
+  /* Affiliated: shown, dimmed, not clickable */
+  .nav-menu .item.dim { color: var(--faint); opacity: 0.45; cursor: not-allowed; }
+
+  .nav-sub {
+    display: none;
+    list-style: none;
+    margin: 0 1.1rem 0.4rem;
+    border-left: 2px solid var(--red);
+  }
+
+  .nav-sub.open { display: block; }
+
+  .nav-sub a {
+    display: block;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.75rem;
+  }
+
   /* ── HERO ── */
   .hero {
     min-height: 92vh;
@@ -585,6 +669,12 @@
       letter-spacing: 0.8px;
     }
 
+    /* Products menu on phones: a full-width panel just under the header */
+    .nav-drop-btn { font-size: 0.72rem; letter-spacing: 0.8px; white-space: nowrap; }
+    .nav-links > li { position: static; }
+    .nav-menu { top: 100%; left: 5%; right: 5%; min-width: 0; }
+    .nav-menu .item, .nav-sub a { padding-top: 0.85rem; padding-bottom: 0.85rem; }
+
     /* One side margin (5%) for every block, so all left edges line up */
     .learning-section, footer { padding-left: 5%; padding-right: 5%; }
 
@@ -631,6 +721,18 @@
   <ul class="nav-links">
     <li><a href="https://infinitybyyam.github.io/Learning/">Learning</a></li>
     <li><a href="https://infinitybyyam.github.io/Calculators/">Calculators</a></li>
+    <li>
+      <button class="nav-drop-btn" id="products-btn" type="button" aria-expanded="false" aria-controls="products-menu">Products <span class="caret">▾</span></button>
+      <ul class="nav-menu" id="products-menu">
+        <li>
+          <button class="item" id="nonaff-btn" type="button" aria-expanded="false" aria-controls="nonaff-sub">Non-affiliated <span class="caret">▸</span></button>
+          <ul class="nav-sub" id="nonaff-sub">
+            <li><a href="https://infinitybyyam.github.io/Products/credit_card.html">Credit Card</a></li>
+          </ul>
+        </li>
+        <li><span class="item dim" aria-disabled="true">Affiliated</span></li>
+      </ul>
+    </li>
     <li><a href="#contact">Contact</a></li>
   </ul>
 </nav>
@@ -811,6 +913,42 @@
     window.addEventListener('resize', setNavHeight);
     window.addEventListener('load', setNavHeight);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(setNavHeight);
+  })();
+</script>
+
+<script>
+  // Products menu: tap or click to open; Non-affiliated opens Credit Card;
+  // Affiliated is shown dimmed and does nothing. Closes on outside tap or Esc.
+  (function () {
+    var btn = document.getElementById('products-btn');
+    var menu = document.getElementById('products-menu');
+    var subBtn = document.getElementById('nonaff-btn');
+    var sub = document.getElementById('nonaff-sub');
+
+    function setOpen(open) {
+      menu.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (!open) {
+        sub.classList.remove('open');
+        subBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(!menu.classList.contains('open'));
+    });
+
+    subBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = !sub.classList.contains('open');
+      sub.classList.toggle('open', open);
+      subBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    menu.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
   })();
 </script>
 
