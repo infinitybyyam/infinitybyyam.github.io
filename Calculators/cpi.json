@@ -1,0 +1,255 @@
+{
+ "series": "Consumer Price Index (Base 2024=100)",
+ "source": "National Statistics Office, Ministry of Statistics and Programme Implementation (MoSPI), Government of India",
+ "sourceUrl": "https://esankhyiki.mospi.gov.in/macroindicators?product=cpi",
+ "weightsSource": "First press release of CPI (Base 2024=100), MoSPI, 12 February 2026",
+ "fetchedVia": "MoSPI API (api.mospi.gov.in)",
+ "dataYear": 2026,
+ "dataMonth": 10,
+ "dataLabel": "October 2026",
+ "updated": "2026-11-15",
+ "headline": {
+  "rural": {
+   "index": 110.73,
+   "inflation": 6.63
+  },
+  "urban": {
+   "index": 109.22,
+   "inflation": 5.41
+  },
+  "combined": {
+   "index": 110.05,
+   "inflation": 6.09
+  }
+ },
+ "divisions": [
+  {
+   "code": "01",
+   "name": "Food and beverages",
+   "weight": {
+    "rural": 41.983,
+    "urban": 30.251,
+    "combined": 36.753
+   },
+   "index": {
+    "rural": 112.83,
+    "urban": 112.7,
+    "combined": 112.78
+   },
+   "inflation": {
+    "rural": 8.7,
+    "urban": 8.19,
+    "combined": 8.51
+   }
+  },
+  {
+   "code": "02",
+   "name": "Paan, tobacco and intoxicants",
+   "weight": {
+    "rural": 3.733,
+    "urban": 2.065,
+    "combined": 2.989
+   },
+   "index": {
+    "rural": 108.8,
+    "urban": 109.28,
+    "combined": 108.95
+   },
+   "inflation": {
+    "rural": 4.7,
+    "urban": 5.42,
+    "combined": 4.93
+   }
+  },
+  {
+   "code": "03",
+   "name": "Clothing and footwear",
+   "weight": {
+    "rural": 7.123,
+    "urban": 5.464,
+    "combined": 6.383
+   },
+   "index": {
+    "rural": 111.8,
+    "urban": 108.45,
+    "combined": 110.52
+   },
+   "inflation": {
+    "rural": 5.61,
+    "urban": 3.89,
+    "combined": 4.96
+   }
+  },
+  {
+   "code": "04",
+   "name": "Housing, water, electricity, gas and other fuels",
+   "weight": {
+    "rural": 11.764,
+    "urban": 25.0,
+    "combined": 17.665
+   },
+   "index": {
+    "rural": 105.62,
+    "urban": 104.11,
+    "combined": 104.67
+   },
+   "inflation": {
+    "rural": 3.73,
+    "urban": 2.41,
+    "combined": 2.9
+   }
+  },
+  {
+   "code": "05",
+   "name": "Furnishings, household equipment and routine household maintenance",
+   "weight": {
+    "rural": 4.609,
+    "urban": 4.296,
+    "combined": 4.469
+   },
+   "index": {
+    "rural": 107.27,
+    "urban": 105.98,
+    "combined": 106.72
+   },
+   "inflation": {
+    "rural": 4.37,
+    "urban": 3.36,
+    "combined": 3.94
+   }
+  },
+  {
+   "code": "06",
+   "name": "Health",
+   "weight": {
+    "rural": 6.764,
+    "urban": 5.275,
+    "combined": 6.1
+   },
+   "index": {
+    "rural": 105.35,
+    "urban": 106.18,
+    "combined": 105.67
+   },
+   "inflation": {
+    "rural": 1.98,
+    "urban": 2.16,
+    "combined": 2.05
+   }
+  },
+  {
+   "code": "07",
+   "name": "Transport",
+   "weight": {
+    "rural": 8.644,
+    "urban": 8.985,
+    "combined": 8.796
+   },
+   "index": {
+    "rural": 106.49,
+    "urban": 106.1,
+    "combined": 106.31
+   },
+   "inflation": {
+    "rural": 5.95,
+    "urban": 5.71,
+    "combined": 5.84
+   }
+  },
+  {
+   "code": "08",
+   "name": "Information and communication",
+   "weight": {
+    "rural": 3.647,
+    "urban": 3.563,
+    "combined": 3.609
+   },
+   "index": {
+    "rural": 106.83,
+    "urban": 106.14,
+    "combined": 106.53
+   },
+   "inflation": {
+    "rural": 3.22,
+    "urban": 3.09,
+    "combined": 3.16
+   }
+  },
+  {
+   "code": "09",
+   "name": "Recreation, sport and culture",
+   "weight": {
+    "rural": 1.359,
+    "urban": 1.71,
+    "combined": 1.516
+   },
+   "index": {
+    "rural": 106.42,
+    "urban": 105.45,
+    "combined": 105.93
+   },
+   "inflation": {
+    "rural": 2.99,
+    "urban": 2.05,
+    "combined": 2.52
+   }
+  },
+  {
+   "code": "10",
+   "name": "Education services",
+   "weight": {
+    "rural": 2.383,
+    "urban": 4.515,
+    "combined": 3.333
+   },
+   "index": {
+    "rural": 107.82,
+    "urban": 110.09,
+    "combined": 109.19
+   },
+   "inflation": {
+    "rural": 3.1,
+    "urban": 4.61,
+    "combined": 4.02
+   }
+  },
+  {
+   "code": "11",
+   "name": "Restaurants and accommodation services",
+   "weight": {
+    "rural": 2.841,
+    "urban": 3.978,
+    "combined": 3.348
+   },
+   "index": {
+    "rural": 115.09,
+    "urban": 116.2,
+    "combined": 115.68
+   },
+   "inflation": {
+    "rural": 10.24,
+    "urban": 9.9,
+    "combined": 10.06
+   }
+  },
+  {
+   "code": "13",
+   "name": "Personal care, social protection and miscellaneous goods and services",
+   "weight": {
+    "rural": 5.15,
+    "urban": 4.899,
+    "combined": 5.038
+   },
+   "index": {
+    "rural": 125.25,
+    "urban": 123.52,
+    "combined": 124.5
+   },
+   "inflation": {
+    "rural": 10.84,
+    "urban": 9.24,
+    "combined": 10.14
+   }
+  }
+ ]
+}
