@@ -3,8 +3,9 @@ name: Update inflation data
 # Asks MoSPI once a day for the latest Consumer Price Index figures (Base 2024=100)
 # and saves them as Calculators/cpi.json for the Personal Inflation Calculator.
 # MoSPI's data API is open, so no login is needed. If nothing changed, nothing is committed.
-# If the figures look wrong, the old file is kept and this run shows a red mark.
-# Older figures never replace newer ones.
+# If the figures look wrong, the old file is kept and this run shows a red mark with a
+# plain-language reason (weights changed, divisions changed, data stopped updating, MoSPI
+# unreachable), which GitHub also sends by email. Older figures never replace newer ones.
 
 on:
   schedule:
@@ -163,6 +164,16 @@ jobs:
               return None
 
 
+          NAMES = {}      # (year, month) -> {code: MoSPI's own division name}
+          UNKNOWN = set()  # division codes MoSPI sent that this workflow doesn't know
+
+
+          def alarm(title, message):
+              """A plain-language failure: shown in the run's Annotations and in GitHub's failure email."""
+              print(f"::error title={title}::{message}")
+              print(f"PROBLEM - {title}: {message}")
+
+
           def add_row(pool, row):
               """Keep only All-India rows at division level (or the general index) for the 2024 series."""
               if not isinstance(row, dict):
@@ -196,7 +207,11 @@ jobs:
               else:
                   code = str(code).strip().zfill(2)
                   if code not in CODES:
+                      UNKNOWN.add(code)
                       return
+                  name = str(row.get("division", "")).strip()
+                  if name:
+                      NAMES.setdefault((y, m), {})[code] = name
               pool.setdefault((y, m), {}).setdefault(sector, {})[code] = (idx, inf)
 
 
@@ -277,16 +292,23 @@ jobs:
           def main():
               pool = {}
               base = {"base_year": "2024", "series": "Current", "Format": "JSON"}
+              old = None
+              try:
+                  with open(OUT, encoding="utf-8") as f:
+                      old = json.load(f)
+              except (OSError, ValueError):
+                  pass
+              showing = f"The site is still showing {old.get('dataLabel')}." if old else "The site has no figures yet."
 
               # Ask for one month at a time, newest first: All India, rural/urban/combined,
               # the general index and the 12 divisions. No login is needed for this.
               today = datetime.date.today()
               y, m = today.year, today.month
-              failures = 0
+              failures, reached = 0, False
               for _ in range(9):
                   try:
                       ask_month(base, y, m, pool)
-                      failures = 0
+                      failures, reached = 0, True
                   except Exception as e:  # noqa: BLE001  (network trouble, not a refusal)
                       print(f"{MONTHS[m-1]} {y}: could not reach MoSPI ({e}).")
                       failures += 1
@@ -305,6 +327,16 @@ jobs:
               if not months:
                   found = {f"{MONTHS[k[1]-1]} {k[0]}": {s: len(v) for s, v in pool[k].items()} for k in pool}
                   print(f"No complete month found. Rows found: {found}")
+                  if UNKNOWN:
+                      alarm("CPI divisions changed",
+                            f"MoSPI is now sending division codes this workflow doesn't know ({', '.join(sorted(UNKNOWN))}). "
+                            f"A new CPI series has probably started. {showing} The divisions and weights need updating.")
+                  elif not reached:
+                      alarm("MoSPI unreachable", f"MoSPI's data service could not be reached today. {showing} "
+                            "It will try again tomorrow; if this repeats for several days, check whether MoSPI's API has moved.")
+                  else:
+                      alarm("No CPI figures found", f"MoSPI answered but sent no complete month in the last nine months. {showing} "
+                            "MoSPI may have changed or stopped this series.")
                   return 1
               y, m = months[0]
               md = pool[(y, m)]
@@ -312,6 +344,9 @@ jobs:
               problem = check(md, "combined")
               if problem:
                   print("Check failed, keeping the old file: " + problem)
+                  alarm("CPI weights changed",
+                        f"MoSPI's weights no longer match - a new CPI series has probably started. {showing} "
+                        "The weights need updating from MoSPI's new release.")
                   return 1
               sectors = ["combined"]
               for s in ("rural", "urban"):
@@ -320,12 +355,6 @@ jobs:
               sectors = [s for s in SECTORS if s in sectors]
 
               # Never go backwards.
-              old = None
-              try:
-                  with open(OUT, encoding="utf-8") as f:
-                      old = json.load(f)
-              except (OSError, ValueError):
-                  pass
               if old and (old.get("dataYear", 0), old.get("dataMonth", 0)) > (y, m):
                   print(f"MoSPI gave {MONTHS[m-1]} {y}, older than the file's {old.get('dataLabel')}; keeping the file.")
                   return 0
@@ -344,7 +373,7 @@ jobs:
                   "divisions": [
                       {
                           "code": code,
-                          "name": name,
+                          "name": NAMES.get((y, m), {}).get(code) or name,
                           "weight": {s: w for s, w in zip(SECTORS, (wr, wu, wc)) if s in sectors},
                           "index": {s: md[s][code][0] for s in sectors},
                           "inflation": {s: md[s][code][1] for s in sectors},
@@ -353,18 +382,26 @@ jobs:
                   ],
               }
 
-              if old:
-                  same = {k: v for k, v in old.items() if k not in ("updated", "fetchedVia")} == \
-                         {k: v for k, v in out.items() if k not in ("updated", "fetchedVia")}
-                  if same:
-                      print(f"No change: still {out['dataLabel']}.")
-                      return 0
+              same = bool(old) and {k: v for k, v in old.items() if k not in ("updated", "fetchedVia")} == \
+                  {k: v for k, v in out.items() if k not in ("updated", "fetchedVia")}
+              if same:
+                  print(f"No change: still {out['dataLabel']}.")
+              else:
+                  with open(OUT, "w", encoding="utf-8") as f:
+                      json.dump(out, f, ensure_ascii=False, indent=1)
+                      f.write("\n")
+                  print(f"Saved {out['dataLabel']}: official inflation {out['headline']['combined']['inflation']}% "
+                        f"(sectors: {', '.join(sectors)}).")
 
-              with open(OUT, "w", encoding="utf-8") as f:
-                  json.dump(out, f, ensure_ascii=False, indent=1)
-                  f.write("\n")
-              print(f"Saved {out['dataLabel']}: official inflation {out['headline']['combined']['inflation']}% "
-                    f"(sectors: {', '.join(sectors)}).")
+              # MoSPI publishes each month around the 12th of the next one, so the newest month is normally
+              # one or two months back. Three or more means something has stopped.
+              today = datetime.date.today()
+              gap = (today.year * 12 + today.month) - (y * 12 + m)
+              if gap >= 3:
+                  alarm("CPI data not updating",
+                        f"The newest figures MoSPI has for the 2024 series are for {out['dataLabel']}, {gap} months ago. "
+                        f"MoSPI may have stopped this series or moved to a new one. The site is still showing {out['dataLabel']}.")
+                  return 1
               return 0
 
 
