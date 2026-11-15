@@ -83,8 +83,15 @@ jobs:
           CTX = {"ctx": make_ctx(True), "verified": True}
 
 
+          class Refused(Exception):
+              """MoSPI answered, but turned the request down (a 4xx reply). Carries MoSPI's own message."""
+              def __init__(self, code, message):
+                  super().__init__(f"HTTP {code}: {message}")
+                  self.code, self.message = code, message
+
+
           def http(method, path, params=None, body=None, headers=None):
-              url = API + path + ("?" + urllib.parse.urlencode(params) if params else "")
+              url = API + path + ("?" + urllib.parse.urlencode(params, safe=",") if params else "")
               data = json.dumps(body).encode("utf-8") if body is not None else None
               h = {"User-Agent": UA, "Accept": "application/json"}
               if data is not None:
@@ -101,6 +108,14 @@ jobs:
                           last = e
                           time.sleep(5 * (attempt + 1))
                           continue
+                      if 400 <= e.code < 500:
+                          msg = ""
+                          try:
+                              j = json.loads(e.read().decode("utf-8") or "{}")
+                              msg = next((str(j[k]) for k in ("message", "msg", "error") if isinstance(j, dict) and j.get(k)), "")
+                          except Exception:  # noqa: BLE001
+                              pass
+                          raise Refused(e.code, msg or "no message")
                       raise
                   except urllib.error.URLError as e:
                       if isinstance(e.reason, ssl.SSLCertVerificationError) and CTX["verified"]:
@@ -211,6 +226,54 @@ jobs:
 
 
           # ---------------------------------------------------------------- main
+          STYLE = {"together": True}   # set to False once MoSPI turns down the all-in-one request
+
+
+          def ask_month(base, y, m, pool):
+              """Fetch one month into pool. Returns 'ok', 'none' (MoSPI has no such month) or raises on network trouble."""
+              when = dict(base, year=str(y), month_code=str(m), state_code="1")
+              # Quick way: everything for the month in one request.
+              if STYLE["together"]:
+                  params = dict(when, sector_code="1,2,3", division_code=",".join(str(i) for i in range(13)), limit="100")
+                  try:
+                      for page in range(1, 11):
+                          params["page"] = str(page)
+                          resp = get_cpi(params)
+                          rows = rows_of(resp)
+                          for r in rows:
+                              add_row(pool, r)
+                          meta = (resp.get("meta_data") or {}) if isinstance(resp, dict) else {}
+                          if complete(pool.get((y, m)), "combined") or not rows:
+                              break
+                          try:
+                              if page >= int(meta.get("totalPages", 1)):
+                                  break
+                          except (TypeError, ValueError):
+                              break
+                      return "ok"
+                  except Refused as e:
+                      print(f"{MONTHS[m-1]} {y}: MoSPI turned down the all-in-one request ({e}); asking one figure at a time.")
+              # Careful way: the exact form tested in a browser, one area and one division per request.
+              got_any = False
+              for s in ("3", "1", "2"):
+                  for d in range(13):
+                      try:
+                          resp = get_cpi(dict(when, sector_code=s, division_code=str(d)))
+                      except Refused as e:
+                          if not got_any:
+                              print(f"{MONTHS[m-1]} {y}: MoSPI has no figures for this month ({e}).")
+                              return "none"
+                          print(f"{MONTHS[m-1]} {y}, area {s}, division {d}: turned down ({e}).")
+                          continue
+                      got_any = True
+                      for r in rows_of(resp):
+                          add_row(pool, r)
+                      time.sleep(0.2)
+              if complete(pool.get((y, m)), "combined"):
+                  STYLE["together"] = False
+              return "ok"
+
+
           def main():
               pool = {}
               base = {"base_year": "2024", "series": "Current", "Format": "JSON"}
@@ -221,33 +284,16 @@ jobs:
               y, m = today.year, today.month
               failures = 0
               for _ in range(9):
-                  failed = False
-                  params = dict(base, year=str(y), month_code=str(m), state_code="1", sector_code="1,2,3",
-                                division_code=",".join(str(i) for i in range(13)), limit="200")
-                  for page in range(1, 11):
-                      params["page"] = str(page)
-                      try:
-                          resp = get_cpi(params)
-                      except Exception as e:  # noqa: BLE001
-                          print(f"{MONTHS[m-1]} {y} page {page}: request failed ({e})")
-                          failed = True
-                          break
-                      rows = rows_of(resp)
-                      for r in rows:
-                          add_row(pool, r)
-                      meta = (resp.get("meta_data") or {}) if isinstance(resp, dict) else {}
-                      if complete(pool.get((y, m)), "combined") or not rows:
-                          break
-                      try:
-                          if page >= int(meta.get("totalPages", 1)):
-                              break
-                      except (TypeError, ValueError):
-                          break
+                  try:
+                      ask_month(base, y, m, pool)
+                      failures = 0
+                  except Exception as e:  # noqa: BLE001  (network trouble, not a refusal)
+                      print(f"{MONTHS[m-1]} {y}: could not reach MoSPI ({e}).")
+                      failures += 1
                   got = complete(pool.get((y, m)), "combined")
-                  print(f"{MONTHS[m-1]} {y}: {'complete' if got else ('could not ask' if failed else 'not published yet')}")
+                  print(f"{MONTHS[m-1]} {y}: {'complete' if got else 'not available'}")
                   if got:
                       break
-                  failures = failures + 1 if failed else 0
                   if failures >= 2:
                       print("MoSPI could not be reached twice in a row; stopping. The file is unchanged.")
                       break
