@@ -22,7 +22,7 @@ jobs:
       - name: Download the latest card data
         run: |
           curl -fsSL --retry 3 --max-time 60 \
-            -A "InfinityByYam-CardFinder/1.0 (+https://infinitybyyam.github.io/Products/credit_card.html)" \
+            -A "InfinityByYam-CardFinder/1.0 (+https://infinitybyyam.github.io/Products/credit_card_finder.html)" \
             -o /tmp/cards.json https://cardadvisor.in/data/cards.json
 
       - name: Check the file looks right
