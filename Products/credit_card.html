@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Finder · Infinity by Yam</title>
+<meta name="description" content="Answer six questions and see which Indian credit cards give you the most back after fees. Data refreshed daily from CardAdvisor.">
+<link rel="icon" href="https://infinitybyyam.github.io/nav-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E50914; --red-2:#ff3b47; --red-soft:rgba(229,9,20,.12); --red-line:rgba(229,9,20,.5);
+  --bg:#080808; --s1:#0f0f0f; --s2:#141414; --s3:#1c1c1c; --s4:#262626; --line:#242424; --line-2:#333;
+  --text:#f4f4f4; --muted:#a8a8a8; --dim:#707070; --good:#46d369; --good-soft:rgba(70,211,105,.1); --bad:#ff6b6b;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h,105px) + 16px)}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;position:relative}
+body::before{content:"";position:absolute;top:-260px;left:50%;transform:translateX(-50%);width:1100px;max-width:100%;height:520px;
+  background:radial-gradient(ellipse at center,rgba(229,9,20,.32),transparent 64%);pointer-events:none;z-index:0}
+a{color:inherit}
+button{font-family:inherit}
+.wrap{width:90%;max-width:1040px;margin:0 auto;position:relative;z-index:1}
+.bebas{font-family:'Bebas Neue',sans-serif;font-weight:400;letter-spacing:.5px}
+
+/* ---------- nav ---------- */
+/* ---------- site header: same as the Learning page ---------- */
+nav.site{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.25rem 6%;
+  background:rgba(8,8,8,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08)}
+.nav-logo{display:flex;align-items:center;gap:0.6rem;text-decoration:none}
+.nav-logo-img{height:64px;width:auto;flex-shrink:0}
+.nav-logo .fallback{display:none;white-space:nowrap;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:#f5f5f7}
+.nav-logo .fallback b{color:var(--red);font-weight:400}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{color:#a1a1a6;text-decoration:none;font-size:0.8rem;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;transition:color 0.2s ease}
+.nav-links a:hover,.nav-links a:focus-visible{color:#f5f5f7}
+.site-top{height:var(--nav-h,105px)}
+
+/* ---------- tabs ---------- */
+.tabs-bar{position:sticky;top:var(--nav-h,105px);z-index:20;background:rgba(8,8,8,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #151515;margin-top:8px}
+.tabs{display:flex;gap:4px;padding:10px 0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;text-decoration:none;font-size:14px;font-weight:500;color:var(--muted);padding:9px 16px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.on{color:#fff;background:var(--s3);border-color:var(--line-2)}
+
+main{flex:1;padding:34px 0 64px}
+.panel{display:none}
+.panel.on{display:block;animation:rise .4s ease}
+.step{display:none}
+.step.on{display:block;animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- common ---------- */
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;color:var(--red)}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);background:var(--s2);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(70,211,105,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(70,211,105,.55)}70%{box-shadow:0 0 0 8px rgba(70,211,105,0)}100%{box-shadow:0 0 0 0 rgba(70,211,105,0)}}
+h1{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(54px,12vw,104px);line-height:.9;letter-spacing:1px}
+h1 em{font-style:normal;color:var(--red)}
+h2{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(34px,7vw,52px);line-height:.95;letter-spacing:.5px}
+h3{font-size:18px;font-weight:700;line-height:1.3}
+.lead{color:var(--muted);font-size:17px;max-width:520px;margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--red);color:#fff;border:0;border-radius:8px;
+  font-weight:700;font-size:15px;padding:14px 24px;cursor:pointer;text-decoration:none;min-height:50px;transition:transform .15s,filter .15s}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;border:1px solid var(--line-2);color:var(--text)}
+.btn.ghost:hover{border-color:#555;filter:none}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.sm{min-height:40px;padding:9px 16px;font-size:14px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:1fr;gap:28px;align-items:center}
+.hero .btn{margin-top:28px}
+.howwrap{margin-top:56px;padding-top:44px;border-top:1px solid var(--line)}
+.srcrow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.live.src{text-decoration:none}
+.live.src:hover{color:var(--text);border-color:var(--line-2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:36px}
+.stat{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat b{display:block;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:34px;line-height:1}
+.stat span{font-size:12.5px;color:var(--muted)}
+.deck{position:relative;height:210px;max-width:380px;width:100%;margin:0 auto}
+.deck .cc{position:absolute;width:72%;left:14%;box-shadow:0 30px 60px rgba(0,0,0,.6)}
+.deck .cc:nth-child(1){transform:rotate(-12deg) translate(-16%,10%);opacity:.75}
+.deck .cc:nth-child(2){transform:rotate(-3deg) translate(2%,2%);opacity:.9}
+.deck .cc:nth-child(3){transform:rotate(7deg) translate(18%,-4%)}
+.promise{display:grid;grid-template-columns:1fr;gap:10px;margin-top:40px}
+.promise div{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;font-size:14px;color:var(--muted)}
+.promise b{color:var(--text);display:block;font-size:15px;margin-bottom:2px}
+@media(min-width:760px){
+  .hero{grid-template-columns:1.15fr .85fr}
+  .deck{height:280px}
+  .promise{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ---------- credit card visual ---------- */
+.cc{aspect-ratio:1.586;border-radius:12px;position:relative;overflow:hidden;padding:9% 8%;display:flex;flex-direction:column;justify-content:space-between;
+  color:#fff;border:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,#3a3a3a,#141414)}
+.cc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.10) 45%,transparent 60%);pointer-events:none}
+.cc .iss{font-weight:700;font-size:13px;letter-spacing:.3px;line-height:1.1;position:relative;z-index:1}
+.cc .chip{width:18%;aspect-ratio:1.3;border-radius:4px;background:linear-gradient(135deg,#d8c27a,#8c7637);position:relative;z-index:1}
+.cc .net{align-self:flex-end;font-weight:700;font-style:italic;font-size:13px;letter-spacing:.5px;position:relative;z-index:1;opacity:.95}
+.cc.t-ENTRY{background:linear-gradient(135deg,#454545,#161616)}
+.cc.t-MID{background:linear-gradient(135deg,#7a0d14,#1e0406)}
+.cc.t-PREMIUM{background:linear-gradient(135deg,#7a6630,#1d170a)}
+.cc.t-SUPER_PREMIUM{background:linear-gradient(135deg,#2c2c30,#020202);border-color:rgba(200,200,210,.35)}
+.cc.mini{border-radius:6px;padding:7px}
+.cc.mini .iss{font-size:7.5px}
+.cc.mini .chip{border-radius:2px}
+.cc.mini .net{font-size:7.5px}
+
+/* ---------- quiz ---------- */
+.quiz{max-width:640px;margin:0 auto;background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:28px 24px}
+.qtop{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim)}
+.qtop .count{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);letter-spacing:1px}
+.qtop .count b{color:var(--red);font-weight:400}
+.bar{height:3px;background:var(--s4);border-radius:2px;margin:12px 0 30px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);transition:width .35s ease}
+.quiz h2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:clamp(22px,5.4vw,30px);line-height:1.2;letter-spacing:0}
+.qhelp{color:var(--muted);margin-top:10px;font-size:15px}
+.readout{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,13vw,72px);line-height:1;margin-top:30px}
+.readsub{color:var(--muted);font-size:14px;margin-top:4px;min-height:21px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;margin:26px 0 8px;outline:none;
+  background:linear-gradient(to right,var(--red) 0%,var(--red) var(--p,50%),var(--s4) var(--p,50%),var(--s4) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:6px solid var(--red);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:6px solid var(--red);cursor:pointer}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
+.typein{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.amt{display:flex;align-items:center;background:var(--s1);border:1px solid var(--line-2);border-radius:8px;padding:0 10px;min-height:42px}
+.amt:focus-within{border-color:var(--red)}
+.amt span{color:var(--muted);font-size:15px}
+.amt input{background:transparent;border:0;outline:none;color:var(--text);font:500 16px 'DM Sans',sans-serif;width:120px;padding:8px 4px;-moz-appearance:textfield}
+.amt input::-webkit-outer-spin-button,.amt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sp .amt{min-height:38px}
+.sp .amt input{width:96px;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:400;padding:4px 2px}
+.split{display:grid;gap:4px;margin-top:22px}
+.sp{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:12px 14px 6px}
+.sp .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sp .top span{font-size:14.5px;font-weight:500}
+.sp .top b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:24px;line-height:1;white-space:nowrap}
+.sp input[type=range]{margin:12px 0 8px}
+.rest{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:12px;padding:12px 14px;border:1px dashed var(--line-2);border-radius:12px;color:var(--muted);font-size:14px}
+.rest b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:24px;color:var(--text);white-space:nowrap}
+.offers{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.offers b{color:var(--text);font-weight:500}
+.offers ul{list-style:none;margin-top:4px}
+.offers li{padding:3px 0 3px 12px;position:relative;overflow-wrap:anywhere}
+.offers li::before{content:"";position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:var(--red)}
+.opts{display:grid;gap:10px;margin-top:26px}
+.opt{text-align:left;background:var(--s2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:15px 16px;
+  cursor:pointer;display:flex;align-items:center;gap:14px;min-height:60px;transition:border-color .15s,background .15s}
+.opt:hover{border-color:#444}
+.opt .r{width:20px;height:20px;border-radius:50%;border:2px solid #555;flex:none;transition:all .15s}
+.opt .t{display:block;font-weight:500;font-size:16px}
+.opt .s{display:block;font-size:13px;color:var(--muted);margin-top:1px}
+.opt.sel{border-color:var(--red);background:var(--red-soft)}
+.opt.sel .r{border-color:var(--red);background:radial-gradient(circle,var(--red) 42%,transparent 48%)}
+.qnav{display:flex;justify-content:space-between;gap:12px;margin-top:32px}
+
+/* ---------- results ---------- */
+.res-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px}
+.sumline{color:var(--muted);margin-top:10px;font-size:15.5px;max-width:620px}
+.sumline b{color:var(--text)}
+.answers{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.ans{background:var(--s2);border:1px solid var(--line);color:var(--text);font-size:13px;border-radius:999px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.ans:hover{border-color:#4a4a4a}
+.ans::after{content:"✎";font-size:11px;color:var(--dim)}
+.hidden-note{font-size:13px;color:var(--dim);margin-top:12px}
+.warn{background:var(--red-soft);border:1px solid var(--red-line);border-radius:var(--r);padding:16px 18px;margin-top:22px;font-size:14.5px}
+.warn b{color:#fff}
+
+.spot{margin-top:26px;border-radius:20px;padding:24px;background:
+  radial-gradient(ellipse at top right,rgba(229,9,20,.22),transparent 60%),var(--s1);border:1px solid var(--red-line);display:grid;gap:22px}
+.spot .label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:700}
+.spot h3{font-size:clamp(20px,4.6vw,26px);margin-top:6px}
+.spot .who{font-size:13.5px;color:var(--muted);margin-top:4px}
+.spot .cc{max-width:300px;width:100%}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
+.kpi{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:30px;line-height:1.05}
+.kpi b.neg{color:var(--bad)}
+.kpi span{font-size:12px;color:var(--muted)}
+@media(min-width:760px){ .spot{grid-template-columns:300px 1fr;align-items:center;padding:30px} .kpis{grid-template-columns:repeat(4,1fr)} }
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:30px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.seg{display:flex;background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:3px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;background:transparent;border:0;color:var(--muted);font-size:13px;font-weight:500;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--s4);color:#fff}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--s2);border:1px solid var(--line);color:var(--muted);font-size:13px;padding:8px 12px;border-radius:999px;cursor:pointer;min-height:36px}
+.chip.on{color:#fff;border-color:var(--red);background:var(--red-soft)}
+select.chip{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);
+  background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px;background-repeat:no-repeat;color:var(--text)}
+
+.list{display:grid;gap:10px;margin-top:16px}
+.row{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:border-color .15s}
+.row:hover{border-color:#333}
+.row-top{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center}
+.row .rk{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--red);letter-spacing:1px}
+.row .nm{font-weight:700;font-size:15.5px;line-height:1.3}
+.row .who{font-size:12.5px;color:var(--dim);margin-top:2px}
+.row .v{text-align:right}
+.row .v b{display:block;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:28px;line-height:1}
+.row .v b.neg{color:var(--bad)}
+.row .v span{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.meter{height:4px;background:var(--s3);border-radius:2px;margin-top:14px;overflow:hidden;position:relative}
+.meter i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#8b060d,var(--red));border-radius:2px}
+.meter s{position:absolute;left:0;top:0;bottom:0;background:rgba(229,9,20,.22);border-radius:2px;text-decoration:none}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:12px;padding:4px 9px;border-radius:999px;background:var(--s3);color:var(--muted)}
+.tag.g{color:var(--good);background:var(--good-soft)}
+.tag.r{color:#ff8a8a;background:var(--red-soft)}
+details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-size:13.5px;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}
+summary::-webkit-details-marker{display:none}
+summary .plus{color:var(--red);font-weight:700;font-size:18px;line-height:1}
+details[open] summary .plus{transform:rotate(45deg)}
+.calc{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+.calc td{padding:8px 0;border-bottom:1px solid #1b1b1b;vertical-align:top}
+.calc td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
+.calc tr.tot td{font-weight:700;color:#fff}
+.calc .sm{display:block;font-size:12px;color:var(--dim)}
+.go{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:13.5px;color:var(--text);text-decoration:none;border-bottom:1px solid var(--red);padding-bottom:1px}
+.more{margin-top:16px;width:100%}
+.empty{background:var(--s1);border:1px dashed var(--line-2);border-radius:var(--r);padding:22px;color:var(--muted);margin-top:16px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+
+/* ---------- browse ---------- */
+.bfilters{display:grid;grid-template-columns:1fr;gap:10px;margin-top:22px}
+.search{width:100%;background:var(--s1);border:1px solid var(--line-2);border-radius:10px;color:var(--text);font-size:16px;padding:13px 14px;outline:none}
+.search:focus{border-color:var(--red)}
+.brow{display:flex;flex-wrap:wrap;gap:8px}
+.bcount{font-size:13px;color:var(--dim);margin-top:14px}
+.bl{display:grid;gap:8px;margin-top:12px}
+.bi{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:12px}
+.bi .hd{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center}
+.bi .nm{font-weight:700;font-size:15px;line-height:1.3}
+.bi .nm a{text-decoration:none}
+.bi .nm a:hover{text-decoration:underline;text-decoration-color:var(--red)}
+.bi .who{font-size:12.5px;color:var(--dim)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.f{background:var(--s2);border-radius:8px;padding:8px 10px;min-width:0}
+.f span{display:block;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f b{display:block;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f b.g{color:var(--good)}
+@media(min-width:760px){
+  .bfilters{grid-template-columns:1.4fr 2fr;align-items:center}
+  .bi{grid-template-columns:minmax(260px,1.2fr) 2fr;align-items:center}
+  .facts{grid-template-columns:repeat(6,1fr)}
+}
+
+/* ---------- how ---------- */
+.how{display:grid;gap:14px;margin-top:26px}
+.how section{min-width:0;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.how h3{display:flex;align-items:center;gap:10px}
+.how h3 .n{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:22px;color:var(--red)}
+.how p{color:var(--muted);font-size:14.5px;margin-top:10px}
+.how p b{color:var(--text)}
+.formula{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;color:var(--text);overflow-wrap:anywhere}
+@media(min-width:760px){ .how{grid-template-columns:1fr 1fr} .how section.wide{grid-column:1/-1} }
+
+.loading{color:var(--muted);padding:40px 0;text-align:center}
+.err{background:var(--red-soft);border:1px solid var(--red-line);border-radius:var(--r);padding:18px;margin-top:20px;color:#ffd5d5;font-size:14.5px}
+
+/* ---------- footer ---------- */
+/* card data credit (kept on the page: the data licence needs it) */
+.fsrc{font-size:12.5px;color:var(--dim);line-height:1.6;max-width:640px;margin-top:40px}
+.fsrc a{color:var(--muted)}
+
+/* ---------- contact + footer: same as the Learning page ---------- */
+.contact-section{padding:6rem 6%;text-align:center;position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,0.06);z-index:1}
+.contact-section::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(500px,90vw);height:300px;
+  background:radial-gradient(ellipse,rgba(229,9,20,0.1) 0%,transparent 70%);pointer-events:none;filter:blur(50px)}
+.contact-pre{font-size:0.75rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:1.25rem}
+.contact-headline{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(2.8rem,6vw,5rem);line-height:0.95;margin-bottom:2rem;letter-spacing:2px;color:#fff}
+.contact-links{position:relative;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap}
+.contact-link{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#a1a1a6;
+  text-decoration:none;padding-bottom:0.3rem;border-bottom:1px solid rgba(255,255,255,0.15);transition:all 0.2s ease}
+.contact-link:hover,.contact-link:focus-visible{color:#fff;border-color:#fff}
+footer{padding:2.5rem 6%;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;position:relative;z-index:1}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#f5f5f7;letter-spacing:2px}
+.footer-logo-byyam{color:var(--red)}
+.footer-copy{font-size:0.8rem;color:#6e6e73}
+@media (max-width:768px){
+  nav.site{flex-direction:column;gap:0.75rem;padding:1rem 5%}
+  .nav-logo-img{height:48px}
+  .nav-links{gap:1.25rem;flex-wrap:wrap;justify-content:center;row-gap:0.3rem}
+  .nav-links a{font-size:0.72rem;letter-spacing:0.8px;white-space:nowrap}
+  .tabs-bar{position:static}
+  .contact-section{padding:4rem 5%}
+  footer{padding-left:5%;padding-right:5%}
+}
+
+@media(max-width:420px){
+  .srcrow{flex-wrap:nowrap;gap:6px}
+  .srcrow .live{font-size:11px;padding:5px 9px;gap:6px;white-space:nowrap}
+  .srcrow .live i{width:7px;height:7px}
+}
+@media(max-width:340px){
+  .srcrow{flex-wrap:wrap}
+  .tab{padding:8px 12px;font-size:13.5px}
+  .spot .cc{max-width:260px}
+  .quiz{padding:22px 16px;border-radius:16px}
+  .row{padding:14px}
+  .row-top{grid-template-columns:48px 1fr auto;gap:10px}
+  .row .v b{font-size:24px}
+  .spot{padding:20px}
+  .stat{padding:12px 10px}
+  .stat b{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<nav class="site">
+  <a href="https://infinitybyyam.github.io/" class="nav-logo">
+    <img class="nav-logo-img" src="https://infinitybyyam.github.io/nav-mark.png" alt="Infinity by Yam"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="fallback">INFINITY <b>BY YAM</b></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="https://infinitybyyam.github.io/">Back to Home</a></li>
+    <li><a href="https://infinitybyyam.github.io/Learning/">Learning</a></li>
+    <li><a href="https://infinitybyyam.github.io/Calculators/">Calculators</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+<div class="site-top"></div>
+
+<main class="wrap">
+  <div id="loading" class="loading">Loading the latest card data…</div>
+  <div id="loaderr" class="err" style="display:none">The card data could not be loaded just now. Please refresh the page in a minute.</div>
+
+  <!-- ================= FIND ================= -->
+  <section class="panel" id="p-find">
+
+    <div class="step on" id="s-intro">
+      <div class="srcrow">
+        <span class="live"><i></i><span id="asof1">Refreshed</span></span>
+        <a class="live src" href="https://cardadvisor.in/data" target="_blank" rel="noopener">Source: CardAdvisor</a>
+      </div>
+      <div class="hero">
+        <div>
+          <h1>Credit Card Finder</h1>
+          <p class="lead">A few quick questions about how you spend. Then see which credit cards give the most back to someone like you, after fees, with every sum shown.</p>
+          <button class="btn" id="startbtn" disabled>Find my card →</button>
+        </div>
+        <div class="deck" aria-hidden="true">
+          <div class="cc t-PREMIUM"><span class="iss">PREMIUM</span><span class="chip"></span><span class="net">VISA</span></div>
+          <div class="cc t-SUPER_PREMIUM"><span class="iss">SUPER PREMIUM</span><span class="chip"></span><span class="net">MASTERCARD</span></div>
+          <div class="cc t-MID"><span class="iss">CARD FINDER</span><span class="chip"></span><span class="net">INFINITY BY YAM</span></div>
+        </div>
+      </div>
+      <div class="howwrap" id="how">
+        <div class="eyebrow">How it works</div>
+        <h2 style="margin-top:8px">What the numbers mean</h2>
+      <div class="stats">
+        <div class="stat"><b id="st-cards">–</b><span>cards compared</span></div>
+        <div class="stat"><b id="st-banks">–</b><span>banks</span></div>
+        <div class="stat"><b id="st-free">–</b><span>lifetime free</span></div>
+      </div>
+      <div class="promise">
+        <div><b>No sign-up</b>Nothing you enter leaves this page.</div>
+        <div><b>No commissions</b>Infinity by Yam earns nothing from any bank, card company, CardAdvisor or anyone else.</div>
+        <div><b>Source credited</b>Card facts come from CardAdvisor and are refreshed daily.</div>
+      </div>
+    <div class="how">
+      <section class="wide">
+        <h3><span class="n">01</span>The yearly figure</h3>
+        <p>For each card, we take what you spend in each area (online shopping, food, groceries, fuel, travel and bills) and apply the card's <b>rate for that area</b>. Where the card has no special rate, its general rate applies. Rewards stop at the card's <b>monthly limit</b>. Then the annual fee and the markup on foreign-currency spend are taken off.</p>
+        <div class="formula">Back to you = spend in each area × the card's rate for it (up to the monthly limit) − annual fee − forex markup</div>
+      </section>
+      <section>
+        <h3><span class="n">02</span>Fees</h3>
+        <p>If a paid card drops its fee once you spend a set amount in a year, and your spend gets there, the fee counts as zero. The one-time joining fee is shown separately. Banks usually add 18% GST on fees, which isn't included.</p>
+      </section>
+      <section>
+        <h3><span class="n">03</span>Who can get it</h3>
+        <p>Cards are left out when your income is below the bank's minimum or your age is outside its limits. Where the bank hasn't published a limit, the card stays in.</p>
+      </section>
+      <section>
+        <h3><span class="n">04</span>If you don't pay in full</h3>
+        <p>Cards are sorted by interest rate instead, lowest first. Most cards here charge 3.5% to 4% interest a month, far more than any reward gives back.</p>
+      </section>
+      <section>
+        <h3><span class="n">05</span>Not counted</h3>
+        <p>Extra rewards at specific shops or apps, welcome gifts, lounge visits, fuel surcharge waivers and milestone bonuses. A card with these can be worth more than its figure here. Points and miles are counted at the cash value the data gives them.</p>
+      </section>
+      <section class="wide">
+        <h3><span class="n">06</span>Where the data comes from</h3>
+        <p>All card facts come from the <a href="https://cardadvisor.in/data" target="_blank" rel="noopener">CardAdvisor India Credit Card Facts Dataset</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. A copy is refreshed from their file every day. Infinity by Yam doesn't check each figure against the banks and earns nothing from any of them.</p>
+        <p><b>This is information, not advice.</b> Banks change fees and rewards often. Always read the bank's own terms before you apply.</p>
+      </section>
+    </div>
+      </div>
+    </div>
+
+    <div class="step" id="s-quiz">
+      <div class="quiz">
+        <div class="qtop"><span class="count" id="qcount"></span><span id="qedit"></span></div>
+        <div class="bar"><i id="qbar"></i></div>
+        <div id="qbody"></div>
+        <div class="qnav">
+          <button class="btn ghost" id="qback">← Back</button>
+          <button class="btn" id="qnext">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="s-results">
+      <div class="res-head">
+        <div>
+          <div class="eyebrow">Your results</div>
+          <h2 style="margin-top:8px" id="rtitle">Cards that give you the most back</h2>
+        </div>
+        <span class="live"><i></i><span id="asof2"></span></span>
+      </div>
+      <p class="sumline" id="sumline"></p>
+      <div class="answers" id="answers"></div>
+      <p class="hidden-note" id="hiddennote"></p>
+      <div id="warn"></div>
+      <div id="spot"></div>
+
+      <div class="controls" id="controls">
+        <div class="seg" id="sortseg">
+          <button data-s="value">Most back</button>
+          <button data-s="fee">Lowest fee</button>
+          <button data-s="forex">Lowest forex</button>
+          <button data-s="apr">Lowest interest</button>
+        </div>
+        <div class="filters">
+          <button class="chip" id="f-ltf">Lifetime free only</button>
+          <select class="chip" id="f-net" aria-label="Card network">
+            <option value="ALL">All networks</option>
+            <option value="VISA">Visa</option><option value="MASTERCARD">Mastercard</option>
+            <option value="RUPAY">RuPay</option><option value="AMEX">Amex</option><option value="DINERS">Diners Club</option>
+          </select>
+        </div>
+      </div>
+      <div class="list" id="list"></div>
+      <button class="btn ghost more" id="morebtn" style="display:none"></button>
+      <div class="actions">
+        <button class="btn ghost sm" id="restart">Start over</button>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <p class="contact-pre">Contact</p>
+  <h2 class="contact-headline">Get in touch</h2>
+  <div class="contact-links">
+    <a href="mailto:infinitybyyam@gmail.com" class="contact-link">↗ Email</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span class="footer-logo-infinity">INFINITY</span> <span class="footer-logo-byyam">BY YAM</span></div>
+  <div class="footer-copy">&copy; 2026 Infinity by Yam. All rights reserved.</div>
+</footer>
+
+<script>
+/* ===================== DATA ===================== */
+const DATA_URL = 'cards.json';   // kept next to this page; refreshed daily by GitHub
+const ISSUER={AMEX:'American Express',AU:'AU Small Finance Bank',AXIS:'Axis Bank',BOB:'Bank of Baroda',CSB:'CSB Bank',CUB:'City Union Bank',
+  FEDERAL:'Federal Bank',HDFC:'HDFC Bank',HSBC:'HSBC',ICICI:'ICICI Bank',IDFC:'IDFC FIRST Bank',INDUSIND:'IndusInd Bank',KOTAK:'Kotak Mahindra Bank',
+  RBL:'RBL Bank',SBI:'SBI Card',SBM:'SBM Bank',SC:'Standard Chartered',SLICE:'slice',UNITY:'Unity Bank',UTKARSH:'Utkarsh SFB',YES:'YES Bank'};
+const NET={VISA:'Visa',MASTERCARD:'Mastercard',RUPAY:'RuPay',AMEX:'Amex',DINERS:'Diners Club'};
+const TIER={ENTRY:'Entry',MID:'Mid',PREMIUM:'Premium',SUPER_PREMIUM:'Super premium'};
+/* spending areas asked about, and the data category each one uses */
+const AREAS=[['online','Online shopping','ONLINE_SHOPPING'],['dining','Food & dining','DINING'],['grocery','Groceries','GROCERY'],
+  ['fuel','Fuel','FUEL'],['travel','Travel','TRAVEL'],['bills','Bills & recharges','UTILITY_BILLS']];
+const POINTS_TYPES=['REWARD_POINTS','AIRLINE_MILES','HOTEL_POINTS'];
+let CARDS=[], AS_OF='';
+const num=v=>(v===''||v==null||isNaN(Number(v)))?null:Number(v);
+function toCard(r){
+  const rw=(r.rewards||[]).map(x=>({cat:x.category,type:x.rewardType,rate:num(x.ratePct)??0,cap:num(x.monthlyCapRs),shops:x.merchants||''}));
+  const c={key:r.cardKey,name:r.name,issuer:r.issuer,network:r.network,tier:r.tier,
+    annual:num(r.annualFeeRs),joining:num(r.joiningFeeRs),ltf:r.lifetimeFree===true,
+    waiver:num(r.feeWaiverSpendRs),forex:num(r.forexMarkupPct),apr:num(r.aprMonthlyPct),
+    minSal:num(r.minSalaryRs),minAge:num(r.minAgeYears),maxAge:num(r.maxAgeYears),url:r.url,
+    general:rw.filter(x=>!x.shops),            // rows that apply to a whole category
+    offers:rw.filter(x=>x.shops)};             // rows that apply only at named shops/apps: shown, not counted
+  c.def=c.general.find(x=>x.cat==='DEFAULT')||null;
+  c.rtype=(c.def||rw[0]||{}).type||'';
+  c.complete=c.annual!=null && rw.length>0;
+  return c;
+}
+
+/* ===================== HELPERS ===================== */
+const $=id=>document.getElementById(id);
+const inr=n=>Math.round(n).toLocaleString('en-IN');
+const money=n=>(n<0?'−':'')+'₹'+inr(Math.abs(n));
+const pct=n=>(Math.round(n*100)/100)+'%';
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iss=c=>ISSUER[c.issuer]||c.issuer;
+const fmtDate=d=>{ if(!d) return ''; const x=new Date(d+'T00:00:00'); return isNaN(x)?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); };
+function ccHTML(c,mini){
+  const short=(ISSUER[c.issuer]||c.issuer).replace(' Small Finance Bank','').replace(' Mahindra Bank','');
+  return `<div class="cc t-${esc(c.tier)}${mini?' mini':''}" aria-hidden="true"><span class="iss">${esc(short.toUpperCase())}</span><span class="chip"></span><span class="net">${esc((NET[c.network]||c.network||'').toUpperCase())}</span></div>`;
+}
+
+/* ===================== ROUTING ===================== */
+const TABS=['find'];
+function route(){
+  const h=location.hash.slice(1); const t=TABS.includes(h)?h:(document.querySelector('.tab.on')?.dataset.tab||'find');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+t && CARDS.length>0));
+  document.querySelectorAll('.tab').forEach(a=>a.classList.toggle('on',a.dataset.tab===t));
+}
+window.addEventListener('hashchange',()=>{ if(TABS.includes(location.hash.slice(1))){ route(); window.scrollTo({top:0}); } });
+/* measure the fixed header so the page starts just below it */
+(function(){ const n=document.querySelector('nav.site'); const set=()=>document.documentElement.style.setProperty('--nav-h',n.offsetHeight+'px');
+  set(); addEventListener('resize',set); addEventListener('load',set); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(set); })();
+
+/* ===================== QUIZ ===================== */
+const SPEND=[1000,2000,3000,5000,7500,10000,15000,20000,25000,30000,40000,50000,75000,100000,150000,200000,300000,500000];
+const INCOME=[10000,15000,20000,25000,30000,35000,40000,50000,60000,75000,100000,150000,200000,250000,300000,500000];
+const DEFAULTS={spend:25000,split:{online:0,dining:0,grocery:0,fuel:0,travel:0,bills:0},income:50000,age:30,fee:'1000',rtype:'any',upi:'no',abroad:'never',payfull:'yes'};
+const fresh=()=>JSON.parse(JSON.stringify(DEFAULTS));
+let state=fresh(), qi=0, editing=false;
+const Q=[
+  {id:'spend',kind:'steps',steps:SPEND,title:'How much will you put on the card each month?',
+   help:'Groceries, fuel, bills, shopping. A rough figure is fine.',fmt:v=>'₹'+inr(v),sub:v=>'a month · about ₹'+inr(v*12)+' a year',lo:1000,hi:5000000,rupee:true,label:'Monthly spend',
+   chip:v=>'Spends ₹'+inr(v)+' a month'},
+  {id:'split',kind:'split',title:'Where does that money go each month?',
+   help:'Set only the ones that apply. Whatever you leave out counts as everything else. Rough figures are fine.',
+   chip:v=>{ const t=AREAS.filter(a=>v[a[0]]>0).map(a=>a[1]+' ₹'+inr(v[a[0]])); return t.length?t.join(' · '):'Spending not split by area'; }},
+  {id:'income',kind:'steps',steps:INCOME,title:'What is your monthly income?',
+   help:'Before tax. Banks set a minimum income for most cards.',fmt:v=>'₹'+inr(v),sub:()=>'a month',lo:0,hi:100000000,rupee:true,label:'Monthly income',
+   chip:v=>'Earns ₹'+inr(v)+' a month'},
+  {id:'age',kind:'range',min:18,max:80,title:'How old are you?',help:'Some cards have age limits.',fmt:v=>v,sub:()=>'years',lo:18,hi:100,label:'Age in years',
+   chip:v=>'Age '+v},
+  {id:'fee',kind:'choice',title:'How much yearly fee are you willing to pay?',
+   help:'Many paid cards drop the fee if you spend enough in a year. The results take that into account.',
+   opts:[['0','Free cards only','No joining or yearly fee'],['1000','Up to ₹1,000','Most everyday cashback cards'],['5000','Up to ₹5,000','Includes premium cards'],['any','Any fee','If the card earns it back']],
+   chip:v=>({'0':'Free cards only','1000':'Fee up to ₹1,000','5000':'Fee up to ₹5,000','any':'Any fee'})[v]},
+  {id:'rtype',kind:'choice',title:'How do you want your rewards?',
+   help:'Cashback comes off your bill. Points and miles are redeemed for vouchers, flights or hotels.',
+   opts:[['any','Either is fine',''],['cashback','Cashback','Money back on the bill'],['points','Points or miles','Redeemed later']],
+   chip:v=>({any:'Any reward type',cashback:'Cashback',points:'Points or miles'})[v]},
+  {id:'upi',kind:'choice',title:'Do you want to pay with the card through UPI?',
+   help:'Only RuPay credit cards can be linked to UPI apps like Google Pay, PhonePe or Paytm.',
+   opts:[['no','No, not needed',''],['yes','Yes','Show RuPay cards only']],
+   chip:v=>v==='yes'?'Needs UPI (RuPay only)':'UPI not needed'},
+  {id:'abroad',kind:'choice',title:'Do you spend in foreign currency?',
+   help:'Trips abroad, or paying foreign websites in dollars. Banks add a markup on these.',
+   opts:[['never','Never',''],['some','Sometimes','About 5% of my spend'],['often','Often','About 20% of my spend']],
+   chip:v=>({never:'No foreign spend',some:'Some foreign spend',often:'Lots of foreign spend'})[v]},
+  {id:'payfull',kind:'choice',title:'Will you pay the full bill every month?',
+   help:'Be honest. This changes which card suits you more than anything else.',
+   opts:[['yes','Yes, always in full','No interest ever'],['no','Not always','Sometimes I carry a balance']],
+   chip:v=>v==='yes'?'Pays the full bill':'Sometimes carries a balance'}
+];
+function showStep(id){ document.querySelectorAll('#p-find .step').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo({top:0}); }
+function startQuiz(i,edit){ qi=i||0; editing=!!edit; renderQ(); showStep('s-quiz'); }
+function sliderPos(q,v){
+  if(q.kind!=='steps') return Math.max(q.min,Math.min(q.max,v));
+  let best=0; q.steps.forEach((s,i)=>{ if(Math.abs(s-v)<Math.abs(q.steps[best]-v)) best=i; }); return best;
+}
+function splitStep(){ return state.spend<=10000?250:state.spend<=50000?500:state.spend<=200000?1000:5000; }
+function restOf(){ return Math.max(0,state.spend-AREAS.reduce((t,[k])=>t+state.split[k],0)); }
+function setFill(r){ const p=(r.value-r.min)/(r.max-r.min)*100; r.style.setProperty('--p',p+'%'); }
+function renderQ(){
+  const q=Q[qi];
+  $('qcount').innerHTML=`<b>${String(qi+1).padStart(2,'0')}</b> / ${String(Q.length).padStart(2,'0')}`;
+  $('qedit').textContent=editing?'Editing an answer':'';
+  $('qbar').style.width=((qi+1)/Q.length*100)+'%';
+  let h=`<h2>${q.title}</h2><p class="qhelp">${q.help}</p>`;
+  if(q.kind==='split'){
+    h+=`<div class="split">`+AREAS.map(([k,l])=>`<div class="sp"><div class="top"><span>${l}</span><span class="amt"><span>₹</span><input type="number" id="si-${k}" inputmode="numeric" min="0" max="${state.spend}" value="${Math.min(state.split[k],state.spend)}" aria-label="${l}, amount a month"></span></div>
+        <input type="range" id="sr-${k}" min="0" max="${state.spend}" step="${splitStep()}" value="${Math.min(state.split[k],state.spend)}" aria-label="${l}"></div>`).join('')+
+      `</div><div class="rest"><span>Everything else</span><b id="sv-rest">₹${inr(restOf())}</b></div>`;
+  } else if(q.kind!=='choice'){
+    const steps=q.kind==='steps';
+    const min=steps?0:q.min, max=steps?q.steps.length-1:q.max;
+    const val=state[q.id];
+    h+=`<div class="split"><div class="sp"><div class="top"><span>${q.label}</span><span class="amt">${q.rupee?'<span>₹</span>':''}<input type="number" id="tin" inputmode="numeric" min="${q.lo}" max="${q.hi}" value="${val}" aria-label="${q.label}"></span></div>
+      <input type="range" id="rng" min="${min}" max="${max}" step="1" value="${sliderPos(q,val)}" aria-label="${q.label}"></div></div>`;
+  } else {
+    h+=`<div class="opts">`+q.opts.map(([v,t,s])=>`<button class="opt ${state[q.id]===v?'sel':''}" data-v="${v}"><span class="r"></span><span><span class="t">${t}</span>${s?`<span class="s">${s}</span>`:''}</span></button>`).join('')+`</div>`;
+  }
+  $('qbody').innerHTML=h;
+  if(q.kind==='split') AREAS.forEach(([k])=>{
+    const el=$('sr-'+k), box=$('si-'+k); setFill(el);
+    const setArea=(raw,fromBox)=>{
+      const others=AREAS.reduce((t,[o])=>o===k?t:t+state.split[o],0);
+      let v=Math.max(0,Math.min(Math.round(raw)||0, state.spend-others)); state.split[k]=v;
+      el.value=v; setFill(el); if(!fromBox||+box.value!==v) box.value=v;
+      $('sv-rest').textContent='₹'+inr(restOf()); };
+    el.oninput=()=>setArea(+el.value,false);
+    box.oninput=()=>{ if(box.value!=='') setArea(+box.value,true); };
+    box.onblur=()=>{ box.value=state.split[k]; }; });
+  const r=$('rng'), tin=$('tin');
+  if(r){ setFill(r); r.oninput=()=>{ const v=q.kind==='steps'?q.steps[+r.value]:+r.value; state[q.id]=v; setFill(r); if(tin) tin.value=v; }; }
+  if(tin){
+    tin.oninput=()=>{ const v=Math.round(+tin.value); if(tin.value===''||!(v>=q.lo&&v<=q.hi)) return; state[q.id]=v; r.value=sliderPos(q,v); setFill(r); };
+    tin.onblur=()=>{ tin.value=state[q.id]; }; }
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    state[q.id]=b.dataset.v; document.querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',x===b)); setTimeout(qNext,240);
+  });
+  $('qnext').textContent = editing ? 'Update results →' : (qi===Q.length-1?'See my cards →':'Next →');
+}
+function qNext(){ if(editing||qi===Q.length-1){ openResults(); } else { qi++; renderQ(); } }
+$('qnext').onclick=qNext;
+$('qback').onclick=()=>{ if(editing){ openResults(); return; } if(qi===0) showStep('s-intro'); else { qi--; renderQ(); } };
+$('startbtn').onclick=()=>startQuiz(0,false);
+$('restart').onclick=()=>{ state=fresh(); showStep('s-intro'); };
+
+/* ===================== MATHS ===================== */
+function evaluate(){
+  const spend=state.spend, yr=spend*12, share={never:0,some:0.05,often:0.2}[state.abroad];
+  const feeLim=state.fee==='any'?Infinity:Number(state.fee);
+  /* monthly spend per area; if the areas add up to more than the total, scale them down */
+  let areaSum=AREAS.reduce((t,[k])=>t+(state.split[k]||0),0), scale=areaSum>spend&&areaSum>0?spend/areaSum:1;
+  const amt={}; AREAS.forEach(([k])=>amt[k]=(state.split[k]||0)*scale);
+  const fxMonthly=spend*share;
+  const list=[], hidden={income:0,age:0,fee:0,rtype:0,upi:0};
+  for(const c of CARDS){
+    if(!c.complete) continue;
+    const annual=c.annual||0, joining=c.joining||0;
+    if(c.minSal && state.income<c.minSal){ hidden.income++; continue; }
+    if((c.minAge!=null&&state.age<c.minAge)||(c.maxAge!=null&&state.age>c.maxAge)){ hidden.age++; continue; }
+    const feeOK=state.fee==='0'?(c.ltf||(annual===0&&joining===0)):Math.max(annual,joining)<=feeLim;
+    if(!feeOK){ hidden.fee++; continue; }
+    if(state.rtype==='cashback'&&c.rtype!=='CASHBACK'){ hidden.rtype++; continue; }
+    if(state.rtype==='points'&&!POINTS_TYPES.includes(c.rtype)){ hidden.rtype++; continue; }
+    if(state.upi==='yes'&&c.network!=='RUPAY'){ hidden.upi++; continue; }
+    /* each slice of spend goes to the card's row for that area, else its general (DEFAULT) row */
+    const intl=c.general.find(x=>x.cat==='INTERNATIONAL');
+    let other=spend-AREAS.reduce((t,[k])=>t+amt[k],0);
+    const slices=[];
+    AREAS.forEach(([k,l,cat])=>{ if(amt[k]>0){ const row=c.general.find(x=>x.cat===cat); slices.push({label:l,spend:amt[k],row:row||c.def,own:!!row}); }});
+    if(intl&&fxMonthly>0){ const f=Math.min(fxMonthly,other); if(f>0){ slices.push({label:'Foreign-currency spend',spend:f,row:intl,own:true}); other-=f; } }
+    if(other>0) slices.push({label:'Everything else',spend:other,row:c.def,own:!!c.def});
+    /* monthly limits apply per row, so slices sharing a row share its limit */
+    const byRow=new Map();
+    slices.forEach(sl=>{ if(!sl.row) return; const e=byRow.get(sl.row)||{spend:0}; e.spend+=sl.spend; byRow.set(sl.row,e); });
+    byRow.forEach((e,row)=>{ e.raw=e.spend*row.rate/100; e.got=row.cap!=null?Math.min(e.raw,row.cap):e.raw; e.capped=row.cap!=null&&e.raw>row.cap; });
+    let rewardsM=0;
+    slices.forEach(sl=>{ if(!sl.row){ sl.rate=0; sl.got=0; return; } const e=byRow.get(sl.row); sl.rate=sl.row.rate; sl.got=e.spend>0?e.got*sl.spend/e.spend:0; sl.capped=e.capped; sl.cap=sl.row.cap; rewardsM+=sl.got; });
+    const rewards=rewardsM*12;
+    const waived=!c.ltf&&annual>0&&c.waiver>0&&yr>=c.waiver;
+    const fee=(c.ltf||waived)?0:annual;
+    const fxSpend=fxMonthly*12, fx=c.forex==null?0:fxSpend*c.forex/100;
+    list.push({c,yr,spend,slices,rewards,fee,waived,fxSpend,fx,annual,joining,net:rewards-fee-fx,year1:rewards-(c.ltf?0:joining)-fx});
+  }
+  return {list,hidden};
+}
+const SORTS={
+  value:(a,b)=>(b.net-a.net)||(a.fee-b.fee),
+  fee:(a,b)=>(a.fee-b.fee)||(a.joining-b.joining)||(b.net-a.net),
+  forex:(a,b)=>((a.c.forex??99)-(b.c.forex??99))||(b.net-a.net),
+  apr:(a,b)=>((a.c.apr??99)-(b.c.apr??99))||(b.net-a.net)
+};
+
+/* ===================== RESULTS ===================== */
+const FIRST=10;
+let RES=null, view={sort:'value',ltf:false,net:'ALL',shown:FIRST};
+function openResults(){
+  editing=false; RES=evaluate();
+  view={sort:state.payfull==='no'?'apr':'value',ltf:false,net:'ALL',shown:FIRST};
+  $('f-net').value='ALL';
+  renderResultsHead(); renderList(); showStep('s-results');
+}
+function renderResultsHead(){
+  const carry=state.payfull==='no', n=RES.list.length;
+  $('rtitle').textContent = !n ? 'No card matches all your answers' : carry ? 'Cards with the lowest interest' : 'Cards that give you the most back';
+  $('sumline').innerHTML = n
+    ? (carry?'Sorted by interest rate, lowest first.':'Sorted by how much each card gives back in a year, after its fee, based on your answers.')
+    : 'Try a higher fee limit, or check your income and age.';
+  $('answers').innerHTML=Q.map((q,i)=>`<button class="ans" data-i="${i}">${esc(q.chip(state[q.id]))}</button>`).join('');
+  document.querySelectorAll('.ans').forEach(b=>b.onclick=()=>startQuiz(+b.dataset.i,true));
+  const one=(k,a,b)=>k===1?a:b, h=[], hd=RES.hidden;
+  if(hd.fee) h.push(`${hd.fee} charge more than you're willing to pay`);
+  if(hd.income) h.push(`${hd.income} need a higher income`);
+  if(hd.age) h.push(`${hd.age} have an age limit you're outside`);
+  if(hd.rtype) h.push(`${hd.rtype} give a different type of reward`);
+  if(hd.upi) h.push(`${hd.upi} can't be used on UPI`);
+  const left=Object.values(hd).reduce((a,b)=>a+b,0), nodata=CARDS.length-n-left;
+  if(nodata>0) h.push(`${nodata} ${one(nodata,'has','have')} no fee or reward figures in the data`);
+  $('hiddennote').textContent = `Out of ${CARDS.length} cards, ${n} ${one(n,'matches','match')} your answers`+'.'+(n>FIRST?` The ${FIRST} that give the most back are shown first.`:'')
+    +(h.length?` Left out: ${h.join(', ')}.`:'');
+  $('warn').innerHTML = carry ? `<div class="warn"><b>Read this first.</b> Most cards here charge about 3.5% to 4% interest a month, roughly 42% to 48% a year. No reward comes close. If you'll carry a balance, the cheapest card is the one with the lowest interest, and the best move is to clear the bill in full whenever you can.</div>` : '';
+  $('controls').style.display = n ? 'flex' : 'none';
+  $('asof2').textContent='Refreshed as of '+fmtDate(AS_OF);
+}
+function filtered(){
+  return RES.list.filter(x=>(!view.ltf||x.c.ltf)&&(view.net==='ALL'||x.c.network===view.net)).sort(SORTS[view.sort]);
+}
+function feeTag(x){
+  const c=x.c;
+  if(c.ltf) return '<span class="tag g">Lifetime free</span>';
+  if(x.waived) return `<span class="tag g">₹${inr(x.annual)} yearly fee waived at your spend</span>`;
+  if(x.annual===0) return '<span class="tag g">No yearly fee</span>';
+  if(c.waiver) return `<span class="tag">₹${inr(x.annual)} yearly fee · waived above ₹${inr(c.waiver)} spend a year</span>`;
+  return `<span class="tag">₹${inr(x.annual)} yearly fee</span>`;
+}
+function tagsHTML(x){
+  const c=x.c, t=[feeTag(x)];
+  if(!c.ltf && x.joining>0) t.push(`<span class="tag">₹${inr(x.joining)} joining fee</span>`);
+  if(c.forex!=null) t.push(`<span class="tag ${c.forex<=2?'g':''}">${pct(c.forex)} forex markup</span>`);
+  if(c.apr!=null) t.push(`<span class="tag ${c.apr<=2?'g':(state.payfull==='no'?'r':'')}">${pct(c.apr)} interest a month</span>`);
+  t.push(`<span class="tag">${TIER[c.tier]||esc(c.tier)} tier</span>`);
+  return `<div class="tags">${t.join('')}</div>`;
+}
+function breakdown(x){
+  const c=x.c, rows=[['Your spend',`₹${inr(x.spend)} a month`]];
+  x.slices.forEach(sl=>{
+    const shared=x.slices.filter(o=>o.row&&o.row===sl.row).length>1;
+    let note=!sl.row?'This card has no general reward rate in the data':(sl.own?'':'No special rate here, so the card\'s general rate applies');
+    if(sl.capped) note=(note?note+'. ':'')+`Rewards capped at ₹${inr(sl.cap)} a month${shared?', shared with the other areas at this rate':''}`;
+    rows.push([`${sl.label}: ₹${inr(sl.spend)} a month at ${pct(sl.rate||0)}${note?`<span class="sm">${note}</span>`:''}`,`+₹${inr(sl.got*12)}`]);
+  });
+  rows.push([`Total rewards in a year`,`+₹${inr(x.rewards)}`]);
+  rows.push([`Annual fee${c.ltf?'<span class="sm">Lifetime free</span>':x.waived?`<span class="sm">Waived: your ₹${inr(x.yr)} a year is above the ₹${inr(c.waiver)} needed</span>`:''}`, x.fee?`−₹${inr(x.fee)}`:'₹0']);
+  if(x.fxSpend>0) rows.push([`Forex markup${c.forex!=null?' '+pct(c.forex):''} on ₹${inr(x.fxSpend)} a year${c.forex==null?'<span class="sm">Markup not published, so nothing is taken off for it</span>':''}`, x.fx?`−₹${inr(x.fx)}`:'₹0']);
+  rows.push(['Back to you each year',money(x.net),'tot']);
+  rows.push(['Interest if not paid in full', c.apr!=null?`${pct(c.apr)} a month`:'not published']);
+  rows.push(['Income needed', c.minSal?`₹${inr(c.minSal)} a month`:'not published']);
+  rows.push(['Age limit', (c.minAge!=null||c.maxAge!=null)?`${c.minAge??'–'} to ${c.maxAge??'no upper limit given'}`:'not published']);
+  return `<details><summary><span>How this was worked out</span><span class="plus">+</span></summary>
+    <table class="calc">${rows.map(r=>`<tr class="${r[2]||''}"><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></details>`;
+}
+function offersHTML(c){
+  if(!c.offers.length) return '';
+  const it=c.offers.slice(0,4).map(o=>`<li>${pct(o.rate)} back: ${esc(o.shops)}${o.cap!=null?` (capped at ₹${inr(o.cap)} a month)`:''}</li>`).join('');
+  return `<div class="offers"><b>Extra rewards at specific shops or apps, not included in the total:</b><ul>${it}</ul>${c.offers.length>4?`<span>${c.offers.length-4} more on CardAdvisor</span>`:''}</div>`;
+}
+const goLink=c=>`<a class="go" href="${esc(c.url)}" target="_blank" rel="noopener">Full details on CardAdvisor ↗</a>`;
+function rowHTML(x,i,maxNet){
+  const c=x.c;
+  const w=maxNet>0?Math.max(0,x.net)/maxNet*100:0;
+  return `<article class="row">
+    <div class="row-top">
+      ${ccHTML(c,true)}
+      <div><div class="rk">#${i+1}</div><div class="nm">${esc(c.name)}</div><div class="who">${esc(iss(c))} · ${esc(NET[c.network]||c.network)}</div></div>
+      <div class="v"><b class="${x.net<0?'neg':''}">${money(x.net)}</b><span>back each year</span></div>
+    </div>
+    <div class="meter"><i style="width:${w}%"></i></div>
+    ${tagsHTML(x)}
+    ${offersHTML(c)}
+    ${breakdown(x)}
+    ${goLink(c)}
+  </article>`;
+}
+function renderList(){
+  document.querySelectorAll('#sortseg button').forEach(b=>b.classList.toggle('on',b.dataset.s===view.sort));
+  $('f-ltf').classList.toggle('on',view.ltf);
+  const L=filtered();
+  const maxNet=Math.max(1,...L.map(x=>x.net));
+  $('spot').innerHTML='';
+  if(!RES.list.length){ $('list').innerHTML=''; $('morebtn').style.display='none'; return; }
+  if(!L.length){ $('list').innerHTML='<div class="empty">No cards match these filters. Try clearing them.</div>'; $('morebtn').style.display='none'; return; }
+  const show=L.slice(0,view.shown);
+  $('list').innerHTML=show.map((x,i)=>rowHTML(x,i,maxNet)).join('');
+  const more=L.length-show.length;
+  $('morebtn').style.display=more>0?'flex':'none';
+  $('morebtn').textContent=`See all ${L.length} matching cards`;
+}
+$('morebtn').onclick=()=>{ view.shown=Infinity; renderList(); };
+document.querySelectorAll('#sortseg button').forEach(b=>b.onclick=()=>{ view.sort=b.dataset.s; view.shown=FIRST; renderList(); });
+$('f-ltf').onclick=()=>{ view.ltf=!view.ltf; view.shown=FIRST; renderList(); };
+$('f-net').onchange=e=>{ view.net=e.target.value; view.shown=FIRST; renderList(); };
+
+
+/* ===================== LOAD ===================== */
+async function load(){
+  try{
+    const res=await fetch(DATA_URL,{cache:'no-cache'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    CARDS=(data.cards||[]).map(toCard).filter(c=>c.key&&c.name);
+    if(!CARDS.length) throw new Error('empty');
+    AS_OF=data.asOf||'';
+  }catch(e){
+    $('loading').style.display='none'; $('loaderr').style.display='block'; return;
+  }
+  $('loading').style.display='none';
+  const date=fmtDate(AS_OF);
+  $('asof1').textContent=`Refreshed as of ${date}`;
+  $('st-cards').textContent=CARDS.length;
+  $('st-banks').textContent=new Set(CARDS.map(c=>c.issuer)).size;
+  $('st-free').textContent=CARDS.filter(c=>c.ltf).length;
+  $('startbtn').disabled=false;
+  route();
+}
+load();
+</script>
+</body>
+</html>
